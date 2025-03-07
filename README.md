@@ -6,7 +6,8 @@ AI Workcohol Project is an AI-powered application designed to automate tasks usi
 
 ## Project Structure
 ```
-E:\AI WORKCOHOL PROJECT
+AI WORKCOHOL PROJECT
+
 │   .env                # Environment variables
 │   .gitattributes      # Git configuration
 │   .gitignore          # Git ignore rules
