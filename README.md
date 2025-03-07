@@ -1,9 +1,5 @@
 ﻿# AI-WORKCOHOL-PROJECT
 
-# AI-WORKCOHOL-PROJECT
-
-
-# AI Workcohol Project
 
 ## Overview
 AI Workcohol Project is an AI-powered application designed to automate tasks using advanced AI models, including LangChain, GPT-4o, Gemini API, and other open-source technologies.
