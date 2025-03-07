@@ -25,3 +25,4 @@ def generate_images(prompt: str, num_images: int = 4):
         st.write(f"Image generation took {end_time - start_time:.2f} seconds.")
     
     return images
+####################################################################################################
