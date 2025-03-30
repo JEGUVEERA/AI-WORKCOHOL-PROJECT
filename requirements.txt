@@ -8,3 +8,4 @@ pyttsx3
 langdetect
 langchain
 langchain-core
+langchain-community
