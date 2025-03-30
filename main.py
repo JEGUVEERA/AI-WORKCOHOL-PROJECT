@@ -389,4 +389,5 @@ if input_txt:
     response = chain.invoke({"query": input_txt})
     st.write(response)
 
-st.markdown("---")
+
+
