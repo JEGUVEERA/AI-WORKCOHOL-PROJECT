@@ -1,0 +1,13 @@
+import logging
+
+# Set up logging
+logging.basicConfig(filename='app.log', level=logging.INFO)
+
+# Run when input is provided
+if input_txt:
+    import time
+    start_time = time.time()
+    response = chain.invoke({"query": input_txt})
+    elapsed_time = time.time() - start_time
+    logging.info(f"Query: {input_txt}, Response Time: {elapsed_time:.2f} seconds")
+    st.write(response)

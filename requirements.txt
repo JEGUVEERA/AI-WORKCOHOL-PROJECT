@@ -1,0 +1,11 @@
+requests
+google-generativeai
+streamlit
+Pillow
+python-dotenv
+gtts
+pyttsx3
+langdetect
+langchain
+langchain-core
+langchain-community
