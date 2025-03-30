@@ -58,7 +58,7 @@ pip install -r requirements.txt
 
 ### Running the Project
 ```sh
-python main.py  # Run the main script
+streamlit run main.py   # Run the main script
 ```
 
 ## Configuration
