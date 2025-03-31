@@ -10,9 +10,4 @@ if input_txt:
     response = chain.invoke({"query": input_txt})
     elapsed_time = time.time() - start_time
     logging.info(f"Query: {input_txt}, Response Time: {elapsed_time:.2f} seconds")
-    st.write(response)INFO:root:Query: 2x  2  \u22125x+3=0, Response Time: 7.47 seconds
-INFO:root:Query: what color is ky?, Response Time: 12.56 seconds
-INFO:root:Query: what color is sky?, Response Time: 15.02 seconds
-INFO:root:Query: what is yser name, Response Time: 3.96 seconds
-INFO:comtypes.client._code_cache:Imported existing <module 'comtypes.gen' from 'e:\\AI WORKCOHOL PROJECT\\.venv\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
-INFO:comtypes.client._code_cache:Using writeable comtypes cache directory: 'e:\AI WORKCOHOL PROJECT\.venv\Lib\site-packages\comtypes\gen'
+    st.write(response)
