@@ -1,5 +1,5 @@
 import streamlit as st
-
+import requests
 
 # Define the URL of your local Ollama server
 ollama_url = "http://127.0.0.1:11434/api/generate"
