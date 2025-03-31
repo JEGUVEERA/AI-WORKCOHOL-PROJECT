@@ -405,43 +405,69 @@ st.markdown("---")
 
 # --- Chatbot UI ---
 
-st.title(" Jeguveera's Chat Bot  🤖 ")
-input_txt = st.text_input("Please enter your queries here...")
 
-# Define Prompt
+
+# Streamlit UI Setup
+st.title("Jeguveera's Chat Bot 🤖")
+st.markdown("### Your AI Assistant for Generating Professional Content")
+
+# User Input
+user_input = st.text_input("Enter your message:")
+
+
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful AI assistant. Your name is Jeguveera's Assistant."
-    "generate information based on user's query"
-    "information be like created by human not AI"
-    "and real-time information should be generated , AI should be able to generate content based on the user's input and like human."
-    "and generate in less time"
-    "should slove complex probems"
-    "if prompt is given related marketing content then just generate marketing content "
-    "if prompt is given related social media content then just generate social media content"
-    "if prompt is given related any content then just generate that content in professional format"
-    "and the output should be in markdown format"
-    "and the output should be in less than 2 seconds"
-    "and the output should be in less than 2000 characters"
-    " and generate only real-time and real-world information based on the user's input. and it should be like created by human not AI"
-    " if in case user given any other prompt then just generate information based on that prompt."
-    "and geneeate and translate in different languages"),
+    ("system", "You are Jeguveera's AI assistant, designed to generate professional, real-world content."
+               "Generate responses that appear to be written by a human."
+               "You must solve complex problems, provide real-time insights, and generate responses within 2 seconds."
+               "If the query is related to marketing, social media, or any specific content, generate professional content accordingly."
+               "The response should always be in markdown format and under 2000 characters."
+               "Additionally, translate content into multiple languages based on user input."),
     ("user", "User query: {query}")
 ])
 
 # Load LLM
-llm = Ollama(model="llama3.2:1b")  # Ensure the model name is correct
+llm = Ollama(model="llama3.2:1b")
 
+# Output Parser
 output_parser = StrOutputParser()
 
-# Create Chain
+# Create LangChain Processing Chain
 chain = prompt | llm | output_parser
 
-if input_txt:
+# Ollama API URL
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+
+# Function to Query Ollama API (Streaming Response)
+def query_ollama(query):
+    response = requests.post(OLLAMA_URL, json={"model": "llama3.2:1b", "prompt": query}, stream=True)
+    
+    response_text = ""
+    
+    for line in response.iter_lines():
+        if line:
+            try:
+                data = json.loads(line)  # Parse each JSON line
+                response_text += data.get("response", "") + " "  # Extract response text
+            except json.JSONDecodeError:
+                continue  # Skip lines that aren't valid JSON
+    
+    return response_text.strip() if response_text else "Error: No response received"
+
+# Process User Input
+if user_input:
+    st.subheader("LangChain Output:")
     try:
-        response = chain.invoke({"query": input_txt})
-        st.write(response)
+        response = chain.invoke({"query": user_input})
+        st.markdown(response)
     except Exception as e:
-        st.error(f"An error occurred: {e}") 
+        st.error(f"LangChain Error: {e}")
+
+    st.subheader("Ollama API Output:")
+    try:
+        ollama_response = query_ollama(user_input)
+        st.markdown(ollama_response)
+    except Exception as e:
+        st.error(f"Ollama API Error: {e}")
 
 st.markdown("---")
 

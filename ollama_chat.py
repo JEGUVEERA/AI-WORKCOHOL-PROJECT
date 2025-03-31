@@ -1,19 +1,28 @@
 import streamlit as st
 import requests
+import json  # Import JSON module to parse streaming response
 
-# Define the URL of your local Ollama server
-ollama_url = "http://127.0.0.1:11434/api/generate"
+# Define Ollama API URL
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
-# Function to send query to Ollama server
+# Function to send query to Ollama server and process streaming response
 def query_ollama(query):
-    response = requests.post(ollama_url, json={"input": query})
-    if response.status_code == 200:
-        return response.json()['text']
-    else:
-        return "Error: Unable to get response from Ollama server"
+    response = requests.post(OLLAMA_URL, json={"model": "llama3.2:1b", "prompt": query}, stream=True)
+    
+    response_text = ""
+    
+    for line in response.iter_lines():
+        if line:
+            try:
+                data = json.loads(line)  # Parse each JSON line
+                response_text += data.get("response", "") + " "  # Extract response text
+            except json.JSONDecodeError:
+                continue  # Skip lines that aren't valid JSON
+    
+    return response_text.strip() if response_text else "Error: No response received"
 
 # Streamlit UI setup
-st.title("Chat with Ollama AI")
+st.title("Jeguveera's Chat Bot 🤖")
 user_input = st.text_input("Enter your message:")
 
 if user_input:
