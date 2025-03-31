@@ -11,3 +11,4 @@ langchain-core
 langchain-community
 textblob
 pytrends
+openai

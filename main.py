@@ -11,6 +11,7 @@ from gtts import gTTS
 import pyttsx3
 from langdetect import detect
 from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
