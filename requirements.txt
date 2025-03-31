@@ -12,3 +12,4 @@ langchain-community
 textblob
 pytrends
 openai
+ollama
