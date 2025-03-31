@@ -82,11 +82,11 @@ def generate_text_content(ingredients: str) -> str:
         "only marketing content should be generated based on the user's input and according to user's input generate it no need extra information."
         " and generate only real-time and reai-world information based on the user's input. and it should be like created by human not AI"
         "generate only according to the prompt"
-        " if user given marketing slogans prompt then just generate only marketing slogans prompt information no more information."
-        " if user given ad copy prompt then just generate only ad copy prompt information no more information"
-        " if user given campaign ideas prompt then just generate only campaign ideas prompt information no more information"
-        " if user given slogans prompt then just generate only  slogans prompt information no more information."
-        " if user given ideas prompt then just generate only ideas prompt information no more information"
+        " if user given marketing slogans prompt then just generate only marketing slogans prompt no more information."
+        " if user given ad copy prompt then just generate only ad copy prompt no more information"
+        " if user given campaign ideas prompt then just generate only campaign ideas prompt no more information"
+        " if user given slogans prompt then just generate only  slogans prompt no more information."
+        " if user given ideas prompt then just generate only ideas prompt no more information"
         f"{ingredients}."
 
     )
@@ -159,7 +159,7 @@ def text_to_speech(text: str, voice: str) -> None:
             
             if voice == "Female":
                 for v in voices:
-                    if "female" in v.name.lwer() or "zira" in v.name.lower():
+                    if "female" in v.name.lower() or "zira" in v.name.lower():
                         engine.setProperty('voice', v.id)
                         break
 
@@ -404,7 +404,7 @@ prompt = ChatPromptTemplate.from_messages([
     "should slove complex probems"
     "if prompt is given related marketing content then just generate marketing content "
     "if prompt is given related social media content then just generate social media content"
-    #"if prompt is given related any content then just generate that content in professional format"
+    "if prompt is given related any content then just generate that content in professional format"
     "and the output should be in markdown format"
     "and the output should be in less than 2 seconds"
     "and the output should be in less than 2000 characters"),
