@@ -437,8 +437,11 @@ output_parser = StrOutputParser()
 chain = prompt | llm | output_parser
 
 if input_txt:
-    response = chain.invoke({"query": input_txt})
-    st.write(response)  
+    try:
+        response = chain.invoke({"query": input_txt})
+        st.write(response)
+    except Exception as e:
+        st.error(f"An error occurred: {e}") 
 
 st.markdown("---")
 
