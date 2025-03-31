@@ -14,20 +14,17 @@ from langchain.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.llms import Ollama
 import time
-import random
-from textblob import TextBlob
-from pytrends.request import TrendReq
+
+
+
 
 
 
 # --- Configuration ---
-
-
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -68,7 +65,9 @@ def generate_text_content(ingredients: str) -> str:
         st.error(f"Error generating text content: {e}")
         return "Error generating content."
 
-
+# --- The rest of the existing code remains unchanged ---
+ 
+    
 def generate_text_content(ingredients: str) -> str:
     prompt = (
         "You are an AI agent for Marketing. "
@@ -97,7 +96,6 @@ def generate_text_content(ingredients: str) -> str:
 
 
 # --- Concurrent Image Generation Function ---
-
 def generate_images(prompt: str, num_images: int = 4):
     HF_MODEL = "stabilityai/stable-diffusion-2"
     api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
@@ -120,6 +118,7 @@ def generate_images(prompt: str, num_images: int = 4):
             return None
 
     images = []
+    # Use a realistic maximum number of workers (e.g., up to 10 or so)
     max_workers = min(num_images, 10)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(fetch_image) for _ in range(num_images)]
@@ -133,16 +132,19 @@ def generate_images(prompt: str, num_images: int = 4):
 
 
 # --- Streamlit UI ---
-
-st.title( "--------- AI Marketing Assistant ------------------------------------------------------")
-st.markdown("**Description:** Text-to-speech functionality in AI Marketing Assistant.")
-
+st.title("AI Marketing Assistant  🎙️ ")
+st.markdown("**Description:** Generate marketing content and images based on your prompt.")
 
 
+# ----- Voice and Tone Customization --------------#
+st.header("Voice and Tone Customization")
+st.markdown("Select the tone and voice for your content.")
 
+# Voice Selection
 voice = st.selectbox("Select Voice", ["Female"], key="voice_selection")
 
-
+# Language Selection (Optional, we detect automatically)
+st.markdown("---")
 
 # --- Text to Speech ---
 def text_to_speech(text: str, voice: str) -> None:
@@ -153,7 +155,8 @@ def text_to_speech(text: str, voice: str) -> None:
             # Use pyttsx3 for English
             engine = pyttsx3.init()
             voices = engine.getProperty('voices')
-            
+
+            # Select female voice
             if voice == "Female":
                 for v in voices:
                     if "female" in v.name.lower() or "zira" in v.name.lower():
@@ -174,8 +177,7 @@ def text_to_speech(text: str, voice: str) -> None:
         st.error(f"Error: {e}")
 
 # --- Streamlit UI for Text to Speech ---
-
-st.title("Text to Speech 🎙️")
+st.header("Text to Speech")
 tts_text = st.text_area("Enter text to convert to speech:", key="tts_text_area")
 
 if st.button("Convert to Speech", key="convert_speech_button"):
@@ -192,13 +194,13 @@ st.markdown("---")
 # --- Marketing Content Generation UI ---
 
 
-st.title("Marketing Content Generator  📢 ")
+st.header("Marketing Content Generation  📢 ")
 
 tone = st.selectbox("Select Tone", ["Formal", "Casual", "Playful", "Professional"], key="tone_selection")
 ingredients = st.text_input("Enter ingredients for marketing content:", placeholder="e.g., marketing slogans, ad copy, campaign ideas")
 if st.button("Generate Marketing Content"):
     if ingredients:
-        
+        # Adjust prompt based on selected tone
         adjusted_prompt = ("Generate {tone.lower()} marketing content based on the following ingredients: {ingredients}"
         "any commentary  only related to prompt details and Do not include codes for any content unless I ask for codes."
         " be like human not AI "
@@ -221,18 +223,13 @@ if st.button("Generate Marketing Content"):
 
 st.markdown("---")
 
-############################################################################
-
-
-
-
 
 #######################################################################################################################
 
 # --- Image Generation UI ---
 
 
-st.title("Image Generator  🖼️ ")
+st.header("Image Generation  🖼️ ")
 image_prompt = st.text_input("Enter an image prompt:", placeholder="e.g., futuristic ad design")
 num_images = st.number_input("Number of Images", min_value=0, max_value=100, value=1)
 if st.button("Generate Images"):
@@ -286,7 +283,7 @@ def generate_email_content(subject: str, body: str) -> str:
         st.error(f"Error generating email content: {e}")
         return "Error generating email."
 
-st.title("Email Marketing Content Generator  📧 ")
+st.header("Email Marketing Content Generation  📧 ")
 email_subject = st.text_input("Enter email subject:")
 email_body = st.text_area("Enter email body:")
 
@@ -294,6 +291,7 @@ tone = st.selectbox("Select Tone", ["Formal", "Casual", "Playful", "Professional
 
 if st.button("Generate Email Content"):
     if email_subject and email_body:
+         # Adjust prompt based on selected tone
         adjusted_email_prompt = f"Generate a {tone.lower()} email with subject '{email_subject}' and body: '{email_body}'"
         email_content = generate_email_content(email_subject, email_body)
         st.subheader("Generated Email Content")
@@ -314,40 +312,15 @@ st.markdown("---")
 
 
 # --- Social Media Post Generation ---
-
-
-# --- Social Media Platform Icons ---
-platform_icons = {
-    "Twitter": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/768px-Logo_of_Twitter.svg.png?20220821125553",
-    "Instagram": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png",
-    "Facebook": "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
-}
-def get_trending_topics():
-    try:
-        pytrends = TrendReq(hl="en-US", tz=360)
-        trending_searches_df = pytrends.trending_searches()
-        return trending_searches_df[0].tolist()  # Returns top trending searches
-    except Exception as e:
-        return f"Error fetching trending topics: {e}"
-
-# --- Social Media Post Generation ---
-
 def generate_social_media_post(platform: str, content: str) -> str:
-    sentiment = TextBlob(content).sentiment.polarity
-    sentiment_label = "neutral"
-    if sentiment > 0:
-        sentiment_label = "positive"
-    elif sentiment < 0:
-        sentiment_label = "negative"
-    
     prompt = (
         f"Generate a {platform} post for the following content: {content}. "
         "Ensure it's engaging, concise, and suitable for the platform. "
         "Include hashtags, emojis, or a call-to-action where appropriate."
         "and real-time information should be generated , AI should be able to generate content based on the user's input and like human."
         "and analyze the generate the information accurately and generate the content."
-        " if links are given then just generate the links "
         
+        #"and it should be like created by human not AI"
     )
     try:
         response = model.generate_content(prompt)
@@ -356,10 +329,15 @@ def generate_social_media_post(platform: str, content: str) -> str:
         st.error(f"Error generating social media post: {e}")
         return "Error generating post."
 
+# --- Social Media Platform Icons ---
+platform_icons = {
+    "Twitter": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/768px-Logo_of_Twitter.svg.png?20220821125553",
+    "Instagram": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png",
+    "Facebook": "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
+}
 
-
-
-st.title(" Social Media Post Generator  📱")
+# --- Streamlit UI for Social Media Post Generation ---
+st.header(" Social Media Post Generation  📱")
 platform = st.selectbox("Select Platform", ["Twitter", "Instagram", "Facebook"])
 
 # Display the selected platform icon
@@ -379,15 +357,12 @@ if st.button("Generate Social Media Post"):
 st.markdown("---")
 
 
-    
-
-
-
 ###############################################################################################################################3333
 
-# --- Chatbot UI ---
 
-st.title(" Jeguveera's Chat Bot  🤖 ")
+
+# Streamlit UI
+st.title("Jeguveera's Chat Bot  🤖 ")
 input_txt = st.text_input("Please enter your queries here...")
 
 # Define Prompt
@@ -396,29 +371,23 @@ prompt = ChatPromptTemplate.from_messages([
     "generate information based on user's query"
     "information be like created by human not AI"
     "and real-time information should be generated , AI should be able to generate content based on the user's input and like human."
-    "and generate in less time"
-    "should slove complex probems"
-    " if prompt is given related marketing content then just generate marketing content "
-    "and the output should be in markdown format"
-    "and the output should be in less than 2 seconds"
-    "and the output should be in less than 2000 characters"),
-      ("user", "User query: {query}")
+    "and generate in less time"),
+    ("user", "User query: {query}")
 ])
 
 # Load LLM
 llm = Ollama(model="llama3.2:1b")  # Ensure the model name is correct
 
+# Define output parser
 output_parser = StrOutputParser()
 
 # Create Chain
 chain = prompt | llm | output_parser
 
+# Run when input is provided
 if input_txt:
     response = chain.invoke({"query": input_txt})
     st.write(response)
-
-
-
 
 
 
