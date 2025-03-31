@@ -399,6 +399,8 @@ prompt = ChatPromptTemplate.from_messages([
     "and generate in less time"
     "should slove complex probems"
     "if prompt is given related marketing content then just generate marketing content "
+    "if prompt is given related social media content then just generate social media content"
+    "if prompt is given related any content then just generate that content in professional format"
     "and the output should be in markdown format"
     "and the output should be in less than 2 seconds"
     "and the output should be in less than 2000 characters"),
