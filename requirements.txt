@@ -9,3 +9,4 @@ langdetect
 langchain
 langchain-core
 langchain-community
+textblob
