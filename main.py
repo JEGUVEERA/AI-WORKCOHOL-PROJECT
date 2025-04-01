@@ -424,7 +424,8 @@ prompt = ChatPromptTemplate.from_messages([
                "The response should always be in markdown format and under 2000 characters."
                "Additionally, translate content into multiple languages based on user input."
                "no need generate any code unless asked by user"
-               "if any promt is given generate  that with high accuracy"),
+               "if any promt is given generate  that with high accuracy"
+               "and generate  responses within 2 seconds in professional way"),
     ("user", "User query: {query}")
 ])
 
