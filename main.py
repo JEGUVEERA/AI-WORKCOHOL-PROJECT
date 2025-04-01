@@ -173,7 +173,8 @@ def text_to_speech(text: str, voice: str) -> None:
             
             if voice == "Female":
                 for v in voices:
-                    if "female" in v.name.lwer() or "zira" in v.name.lower():
+                    if "female" in v.name.lower() or "zira" in v.name.lower():
+
                         engine.setProperty('voice', v.id)
                         break
 
@@ -421,7 +422,9 @@ prompt = ChatPromptTemplate.from_messages([
                "You must solve complex problems, provide real-time insights, and generate responses within 2 seconds."
                "If the query is related to marketing, social media, or any specific content, generate professional content accordingly."
                "The response should always be in markdown format and under 2000 characters."
-               "Additionally, translate content into multiple languages based on user input."),
+               "Additionally, translate content into multiple languages based on user input."
+               "no need generate any code unless asked by user"
+               "if any promt is given generate  that with high accuracy"),
     ("user", "User query: {query}")
 ])
 
@@ -477,4 +480,3 @@ if user_input:
         st.error(f"Ollama API Error: {e}")
 
 st.markdown("---")
-
