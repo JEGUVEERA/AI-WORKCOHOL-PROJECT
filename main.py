@@ -439,19 +439,26 @@ OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
 # Function to Query Ollama API (Streaming Response)
 def query_ollama(query):
-    response = requests.post(OLLAMA_URL, json={"model": "llama3.2:1b", "prompt": query}, stream=True)
-    
-    response_text = ""
-    
-    for line in response.iter_lines():
-        if line:
-            try:
-                data = json.loads(line)  # Parse each JSON line
-                response_text += data.get("response", "") + " "  # Extract response text
-            except json.JSONDecodeError:
-                continue  # Skip lines that aren't valid JSON
-    
-    return response_text.strip() if response_text else "Error: No response received"
+    try:
+        response = requests.post(OLLAMA_URL, json={"model": "llama3.2:1b", "prompt": query}, stream=True)
+        
+        if response.status_code != 200:
+            return f"Error: Received status code {response.status_code} from Ollama API."
+
+        response_text = ""
+        
+        for line in response.iter_lines():
+            if line:
+                try:
+                    data = json.loads(line)  # Parse each JSON line
+                    response_text += data.get("response", "") + " "  # Extract response text
+                except json.JSONDecodeError:
+                    continue  # Skip lines that aren't valid JSON
+        
+        return response_text.strip() if response_text else "Error: No response received"
+    except requests.exceptions.RequestException as e:
+        return f"Error: Unable to connect to Ollama API. {str(e)}"
+
 
 # Process User Input
 if user_input:
