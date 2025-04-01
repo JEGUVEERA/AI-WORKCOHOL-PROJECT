@@ -13,4 +13,4 @@ textblob
 pytrends
 openai
 ollama
-ngrok
+
