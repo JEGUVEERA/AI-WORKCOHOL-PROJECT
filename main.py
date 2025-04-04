@@ -310,6 +310,7 @@ if st.button("Generate Images"):
 st.markdown("---")
 
 ###############################################################################
+
 # Streamlit UI Setup
 st.title("Text Analysis and Creative Sentiment Response Generator  📝 ")
 st.markdown("### Enter your text below:")
