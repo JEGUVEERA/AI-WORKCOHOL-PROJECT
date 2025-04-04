@@ -56,7 +56,7 @@ def analyze_sentiment(text: str) -> str:
     "sparkling", "spectacular", "spontaneous", "steadfast", "stunning", "suave",
     "sublime", "successful", "sufficient", "superb", "supportive", "sweet",
     "sympathetic", "talented", "tenacious", "tender", "thrilled", "tidy",
-    "tranquil", "transformative", "trustworthy", "truthful", "unconditional",
+     "transformative", "trustworthy", "truthful", "unconditional",
     "unfailing", "unique", "uplifted", "valiant", "versatile", "vibrant",
     "visionary", "vivacious", "warm", "welcoming", "wise", "witty", "wonderful",
     "worthy", "youthful", "zealous", "zesty"
