@@ -600,4 +600,4 @@ if st.button("Show Chat History"):
             st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
             st.markdown("---")  # Optional separator line
     else:
-        
+        st.markdown("No chat history available.")
