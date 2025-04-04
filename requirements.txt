@@ -16,4 +16,4 @@ openai==1.69.0
 ollama==0.4.7
 ngrok==1.4.0
 asyncio==3.4.3
-sentiment==1.0.0
+
