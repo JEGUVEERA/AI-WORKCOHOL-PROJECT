@@ -1,5 +1,5 @@
 requests==2.32.3
-google-generativeai==0.8.4
+google-generativeai<0.9.0
 streamlit==1.44.0
 pillow==11.1.0
 python-dotenv==1.0.1
@@ -16,4 +16,4 @@ openai==1.69.0
 ollama==0.4.7
 ngrok==1.4.0
 asyncio==3.4.3
-langchain_google_genai==2.1.2
+langchain_google_genai<2.2.0,>=2.1.2
