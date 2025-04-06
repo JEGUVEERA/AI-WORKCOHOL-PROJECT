@@ -14,21 +14,21 @@ from langchain_openai import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.llms import Ollama
 import time
 import shutil
-
 import random
 from textblob import TextBlob
 from pytrends.request import TrendReq
 import asyncio
 import aiohttp
 from sentiment import agent, analyze_sentiment
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
+logging.info("App started!")
 
 
 
@@ -115,7 +115,7 @@ def generate_text_content(ingredients: str) -> str:
 
 # --- Streamlit UI ---
 
-st.title( "--------- AI Marketing Assistant ------------------------------------------------------")
+st.title( "---------- AI FOR MARKETING  ------------------------------------------------------")
 st.markdown("*Description:* Text-to-speech functionality in AI Marketing Assistant.")
 
 
