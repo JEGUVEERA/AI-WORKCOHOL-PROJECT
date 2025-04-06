@@ -3,7 +3,4 @@
 .streamlit/secrets.toml
 __pycache__/
 *.pyc
-service_account.json
-chat_history.json
-credentials.json
-temp_google_creds.json
+

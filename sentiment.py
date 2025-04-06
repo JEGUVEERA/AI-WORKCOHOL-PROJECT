@@ -1,34 +1,16 @@
-import streamlit as st
-import json
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
-from google.oauth2 import service_account
 from dotenv import load_dotenv
 from langchain.agents import Tool, initialize_agent
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 load_dotenv()
 
-# Use Google Credentials from Streamlit secrets if available
-if "google" in st.secrets and "credentials" in st.secrets["google"]:
-    google_creds = json.loads(st.secrets["google"]["credentials"])
-    with open("temp_google_creds.json", "w") as f:
-        json.dump(google_creds, f)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "temp_google_creds.json"
-    service_account_info = google_creds
-else:
-    # Fallback for local: load from .env
-    google_credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
-    with open(google_credentials_path) as f:
-        service_account_info = json.load(f)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
-
-# Get credentials
-credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
 # Init Gemini
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", credentials=credentials)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", )
 
 
 # Sentiment analysis function
