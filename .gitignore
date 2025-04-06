@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 service_account.json
 chat_history.json
+credentials.json
