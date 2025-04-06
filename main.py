@@ -28,7 +28,7 @@ from sentiment import agent, analyze_sentiment
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logging.info("App started!")
+logging.info("App started!!")
 
 
 
