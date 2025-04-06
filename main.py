@@ -42,6 +42,7 @@ if os.path.exists(".env"):
     HF_API_KEY = os.getenv("HF_API_KEY")
 else:
     # Use Streamlit Secrets only in deployment
+    # Fallback for local development
     GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
     HF_API_KEY = st.secrets.get("HF_API_KEY", "")
 if not GEMINI_API_KEY:
@@ -49,7 +50,7 @@ if not GEMINI_API_KEY:
     st.stop()
 
 if not HF_API_KEY:
-    st.warning("Warning: HF_API_KEY is missing. Image and video generation may not work.")
+    st.warning("Warning: HF_API_KEY is missing. Image generation may not work.")
 
 # --- Initialize Gemini ---
 genai.configure(api_key=GEMINI_API_KEY)

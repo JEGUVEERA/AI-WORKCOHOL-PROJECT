@@ -19,10 +19,10 @@ if "google" in st.secrets and "credentials" in st.secrets["google"]:
     service_account_info = google_creds
 else:
     # Fallback for local: load from .env
-    credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
-    with open(credentials_path) as f:
+    google_credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
+    with open(google_credentials_path) as f:
         service_account_info = json.load(f)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
 
 # Get credentials
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
