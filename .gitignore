@@ -3,5 +3,5 @@
 .streamlit/secrets.toml
 __pycache__/
 *.pyc
-define.json
+service_account.json
 chat_history.json
