@@ -1,28 +1,29 @@
-import os
-import json
 import streamlit as st
+import json
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
 from google.oauth2 import service_account
 from dotenv import load_dotenv
+from langchain.agents import Tool, initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
 
-# 1. Load environment variables from .env file (for local dev)
+# Load environment variables for local development
 load_dotenv()
 
-# 2. Check if running on Streamlit Cloud (has secrets)
+# Load credentials
 if "GOOGLE_CREDENTIALS" in st.secrets:
+    # If running on Streamlit Cloud
     service_account_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
 else:
-    # 3. Otherwise, load credentials from local file path defined in .env
-    credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
-
-    if not credentials_path:
-        raise ValueError("GOOGLE_CREDENTIALS_PATH environment variable is not set.")
-
-    with open(credentials_path) as f:
+    # If running locally, get from .env file
+    with open(os.getenv("GOOGLE_CREDENTIALS_PATH")) as f:
         service_account_info = json.load(f)
 
-# 4. Create credentials object for use
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
+# Initialize Gemini model
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", credentials=credentials)
 
 
 # Sentiment analysis function
@@ -136,11 +137,11 @@ def analyze_sentiment(text: str) -> str:
     else:
         return "ℹ️ The sentiment of the text is **neutral**."
 
+# Creative response function
 def generate_creative_response(text: str) -> str:
     return f"✨ *Creative Response*: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
 # Define LangChain tools
-
 tools = [
     Tool(
         name="AnalyzeSentiment",
