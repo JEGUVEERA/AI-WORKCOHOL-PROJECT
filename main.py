@@ -133,7 +133,7 @@ voice = st.selectbox("Select Voice ", [ "Female"],key="voice_selection")
 # --- Function to Split Long Text ---
 
 
-# --- Optional: Split for extreme cases, but we won’t save multiple files
+
 def split_text(text, max_chars=300):
     if len(text) <= max_chars:
         return [text]
@@ -172,18 +172,18 @@ def text_to_speech(text: str, voice: str) -> str:
                         engine.setProperty('voice', v.id)
                         break
 
-            # Save as WAV (pyttsx3 doesn't support MP3 directly)
+            
             wav_filename = f"output_{timestamp}.wav"
             engine.save_to_file(text, wav_filename)
             engine.runAndWait()
 
-            # Optional: Convert WAV to MP3 (if needed), or just use WAV
-            return wav_filename  # Return the file path
+            
+            return wav_filename  
 
         else:
-            # Use gTTS for non-English and save as one MP3
+           
             chunks = split_text(text)
-            combined_text = " ".join(chunks)  # Merge all chunks into one string
+            combined_text = " ".join(chunks) 
 
             tts = gTTS(text=combined_text, lang=detected_language)
             tts.save(filename)
@@ -343,13 +343,13 @@ user_input = st.text_area("Input Text:", height=150)
 
 if st.button("Analyze"):
     if user_input:
-        # Invoke the agent with the user input
+       
         response = agent({"input": user_input})
 
-        # Display the response in the structured format
+      
         st.subheader("Analysis Result:")
         
-        # Start of the structured response
+       
         st.markdown("*Thought:* Do I need to use a tool? Yes")
         st.markdown(f"*Action:* AnalyzeSentiment")
         st.markdown(f"*Action Input:* {user_input}")
@@ -502,26 +502,26 @@ st.markdown("---")
 st.title("Jeguveera's Chat Bot 🤖")
 st.markdown("### Your AI Assistant for Generating Professional Content")
 
-## --- Function to Load Chat History ---
+
 def load_chat_history():
     if os.path.exists("chat_history.json"):
         with open("chat_history.json", "r") as f:
             return json.load(f)
     return []
 
-# --- Function to Save Chat History ---
+
 def save_chat_history():
     with open("chat_history.json", "w") as f:
         json.dump(st.session_state.chat_history, f)
 
-# Ensure session state for chat history exists
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = load_chat_history()
 
-# --- Function to create chat history entry ---
+
 def create_chat_history_entry(feature: str, user_input: str, ai_response: str):
     st.session_state.chat_history.append({"feature": feature, "user": user_input, "ai": ai_response})
-    save_chat_history()  # Save the history to file after adding a new entry
+    save_chat_history()  
 
 # Prompt Template
 prompt = ChatPromptTemplate.from_messages([
@@ -563,10 +563,10 @@ async def query_ollama_async(query):
                 async for line in response.content:
                     if line:
                         try:
-                            data = json.loads(line)  # Parse each JSON line
-                            response_text += data.get("response", "") + " "  # Extract response text
+                            data = json.loads(line)  
+                            response_text += data.get("response", "") + " "  
                         except json.JSONDecodeError:
-                            continue  # Skip lines that aren't valid JSON
+                            continue 
                 return response_text.strip() if response_text else "Error: No response received"
     except asyncio.TimeoutError:
         return "Error: Request timed out."
@@ -577,7 +577,6 @@ async def query_ollama_async(query):
 # User Input
 user_input = st.text_input("Enter your message:")
 
-# Variable to store the last successful Ollama response
 last_ollama_response = ""
 
 st.markdown("---")
@@ -593,16 +592,16 @@ if user_input:
 
     st.subheader("Ollama API Output:")
     try:
-        # Call the asynchronous function
+      
         ollama_response = asyncio.run(query_ollama_async(user_input))
         if "Error: Request timed out." in ollama_response:
-            st.error(ollama_response)  # Display the timeout error
-            if last_ollama_response:  # Check if there is a last successful response
+            st.error(ollama_response) 
+            if last_ollama_response:  
                 st.markdown("Last successful response was:")
-                st.markdown(last_ollama_response)  # Show the last successful response
+                st.markdown(last_ollama_response)  
         else:
             st.markdown(ollama_response)
-            last_ollama_response = ollama_response  # Update the last successful response
+            last_ollama_response = ollama_response 
             create_chat_history_entry("Jeguveera's Chat Bot", user_input, ollama_response)
     except Exception as e:
         st.error(f"Ollama API Error: {e}")
@@ -610,7 +609,7 @@ if user_input:
 
 
 # --- Chat History Button ---#
-# Optional: Show chat history if needed
+
 if st.button("Show Chat History"):
     if "chat_history" in st.session_state and st.session_state.chat_history:
         st.subheader("Chat History:")

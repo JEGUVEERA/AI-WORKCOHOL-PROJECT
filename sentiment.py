@@ -9,16 +9,23 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
 # Load environment variables for local development
+
 load_dotenv()
 
-# Load credentials
-if "GOOGLE_CREDENTIALS" in st.secrets:
-    # If running on Streamlit Cloud
-    service_account_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+# Handle Google credentials (for Streamlit Cloud or local)
+
+if "google" in st.secrets and "credentials" in st.secrets["google"]:
+    google_creds = json.loads(st.secrets["google"]["credentials"])
+    with open("temp_google_creds.json", "w") as f:
+        json.dump(google_creds, f)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "temp_google_creds.json"
+    service_account_info = google_creds
 else:
-    # If running locally, get from .env file
+    # Local fallback using GOOGLE_CREDENTIALS_PATH
+
     with open(os.getenv("GOOGLE_CREDENTIALS_PATH")) as f:
         service_account_info = json.load(f)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
@@ -137,11 +144,11 @@ def analyze_sentiment(text: str) -> str:
     else:
         return "ℹ️ The sentiment of the text is **neutral**."
 
-# Creative response function
 def generate_creative_response(text: str) -> str:
     return f"✨ *Creative Response*: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
 # Define LangChain tools
+
 tools = [
     Tool(
         name="AnalyzeSentiment",
