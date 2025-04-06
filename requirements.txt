@@ -16,4 +16,3 @@ openai==1.69.0
 ollama==0.4.7
 ngrok==1.4.0
 asyncio==3.4.3
-langchain-google-genai==0.1.0  # Ensure this package is available and compatible
