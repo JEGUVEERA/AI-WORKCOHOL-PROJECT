@@ -4,15 +4,14 @@ import streamlit as st
 from google.oauth2 import service_account
 from dotenv import load_dotenv
 
-# Load .env file if it exists (for local development)
+# 1. Load environment variables from .env file (for local dev)
 load_dotenv()
 
-# Check if running on Streamlit Cloud (st.secrets is available)
+# 2. Check if running on Streamlit Cloud (has secrets)
 if "GOOGLE_CREDENTIALS" in st.secrets:
-    # Load credentials from secrets.toml
     service_account_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
 else:
-    # Load from local file path using .env variable
+    # 3. Otherwise, load credentials from local file path defined in .env
     credentials_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
     if not credentials_path:
@@ -21,7 +20,7 @@ else:
     with open(credentials_path) as f:
         service_account_info = json.load(f)
 
-# Now create credentials object
+# 4. Create credentials object for use
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
 
