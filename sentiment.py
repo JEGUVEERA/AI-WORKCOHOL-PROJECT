@@ -59,7 +59,7 @@ def analyze_sentiment(text: str) -> str:
      "transformative", "trustworthy", "truthful", "unconditional",
     "unfailing", "unique", "uplifted", "valiant", "versatile", "vibrant",
     "visionary", "vivacious", "warm", "welcoming", "wise", "witty", "wonderful",
-    "worthy", "youthful", "zealous", "zesty","good"
+    "worthy", "youthful", "zealous", "zesty","good","warm"
 ]
 
     negative_words = [
