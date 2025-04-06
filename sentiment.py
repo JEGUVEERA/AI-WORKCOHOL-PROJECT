@@ -9,23 +9,16 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
 # Load environment variables for local development
-
 load_dotenv()
 
-# Handle Google credentials (for Streamlit Cloud or local)
-
-if "google" in st.secrets and "credentials" in st.secrets["google"]:
-    google_creds = json.loads(st.secrets["google"]["credentials"])
-    with open("temp_google_creds.json", "w") as f:
-        json.dump(google_creds, f)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "temp_google_creds.json"
-    service_account_info = google_creds
+# Load credentials
+if "GOOGLE_CREDENTIALS" in st.secrets:
+    # If running on Streamlit Cloud
+    service_account_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
 else:
-    # Local fallback using GOOGLE_CREDENTIALS_PATH
-
+    # If running locally, get from .env file
     with open(os.getenv("GOOGLE_CREDENTIALS_PATH")) as f:
         service_account_info = json.load(f)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
