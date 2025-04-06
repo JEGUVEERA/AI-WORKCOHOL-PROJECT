@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from gtts import gTTS
 import pyttsx3
 from langdetect import detect
-from langchain.llms import OpenAI
+from langchain_openai import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
@@ -109,38 +109,6 @@ def generate_text_content(ingredients: str) -> str:
   
 
 
-# --- Concurrent Image Generation Function ---
-
-def generate_images(prompt: str, num_images: int = 4):
-    HF_MODEL = "stabilityai/stable-diffusion-2"
-    api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-
-    def fetch_image():
-        try:
-            payload = json.dumps({
-                "inputs": prompt,
-                "options": {"wait_for_model": True}
-            })
-            response = requests.post(api_url, headers=headers, data=payload)
-            if response.status_code != 200:
-                st.error(f"Error generating image: {response.content}")
-                return None
-            image = Image.open(BytesIO(response.content))
-            return image
-        except Exception as e:
-            st.error(f"Error generating image: {e}")
-            return None
-
-    images = []
-    max_workers = min(num_images, 10)
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(fetch_image) for _ in range(num_images)]
-        for future in as_completed(futures):
-            img = future.result()
-            if img is not None:
-                images.append(img)
-    return images
 
 
 ############################################################################################################
@@ -250,12 +218,13 @@ if st.button("Convert to Speech", key="convert_speech_button"):
 st.title("Marketing Content Generator  📢 ")
 
 tone = st.selectbox("Select Tone", ["Formal", "Casual", "Playful", "Professional"], key="tone_selection")
-ingredients = st.text_input("Enter ingredients for marketing content:", placeholder="e.g., marketing slogans, ad copy, campaign ideas")
+ingredients = st.text_input("Enter ingredients for marketing content:", placeholder="e.g., marketing slogans, slogans, ad copy, campaign ideas , ideas")
 if st.button("Generate Marketing Content"):
     if ingredients:
-        adjusted_prompt = ("Generate {tone.lower()} marketing content based on the following ingredients: {ingredients}"
+        adjusted_prompt = ("Generate only marketing content (slogans, ad copy, campaign ideas, marketing ideas) based on the following input: {ingredients}."
         "any commentary  only related to prompt details and Do not include codes for any content unless I ask for codes."
         " be like human not AI "
+        "Generate only marketing content (slogans, ad copy, campaign ideas, marketing ideas) based on the following input: {ingredients}."
         "and real-time information should be generated , AI should be able to generate content based on the user's input and like human."
         "only marketing content should be generated based on the user's input and according to user's input generate it no need extra information."
         " and generate only real-time and real-world information based on the user's input. and it should be like created by human not AI"
@@ -284,28 +253,82 @@ st.markdown("---")
 # --- Image Generation UI ---
 
 
-st.title("Image Generator  🖼️ ")
-image_prompt = st.text_input("Enter an image prompt:", placeholder="e.g., futuristic ad design")
-num_images = st.number_input("Number of Images", min_value=0, max_value=100, value=1)
-if st.button("Generate Images"):
+st.title("Image Generator  🖼️")
+
+# --- Input Fields ---
+image_prompt = st.text_input("📝 Enter your image prompt:", placeholder="e.g., hyper-realistic portrait of a young astronaut")
+num_images = st.slider("🖼️ Number of Images", min_value=1, max_value=10, value=1)
+guidance_scale = st.slider("🎯 Guidance Scale", 1.0, 20.0, 7.5, step=0.5)
+style = st.selectbox("🎨 Choose a Style", ["Realistic", "Anime", "Photographic", "Fantasy", "Digital Art", "No Preference"])
+
+# --- Style Mapping ---
+style_map = {
+    "Realistic": "hyper-realistic, photo-like, cinematic lighting",
+    "Anime": "anime, cel-shading, high contrast",
+    "Photographic": "35mm photo, DSLR, natural light, ultra detailed",
+    "Fantasy": "fantasy, magic, ethereal glow, dramatic colors",
+    "Digital Art": "digital painting, concept art, stylized, vibrant colors",
+    "No Preference": ""
+}
+
+# --- Image Generation Function ---
+def generate_images(prompt: str, num_images: int = 1, style_desc: str = "", guidance: float = 7.5):
+    HF_MODEL = "stabilityai/stable-diffusion-xl-base-1.0"
+    api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    full_prompt = f"{prompt}, {style_desc}".strip(", ")
+    images = []
+
+    for i in range(num_images):
+        try:
+            st.info(f"🧠 Generating Image {i+1}...")
+            payload = json.dumps({
+                "inputs": full_prompt,
+                "options": {
+                    "wait_for_model": True,
+                    "use_cache": False,
+                    "guidance_scale": guidance
+                }
+            })
+            start_time = time.time()
+            response = requests.post(api_url, headers=headers, data=payload)
+            end_time = time.time()
+
+            if response.status_code == 200:
+                img = Image.open(BytesIO(response.content))
+                images.append((img, end_time - start_time))
+            else:
+                st.error(f"❌ Error generating image {i+1}: {response.content}")
+        except Exception as e:
+            st.error(f"⚠️ Exception: {e}")
+    return images
+
+# --- Generate Button ---
+if st.button("🚀 Generate Realistic Images"):
     if image_prompt:
-        with st.spinner("Generating images..."):
-            images = generate_images(image_prompt, num_images=int(num_images))
+        with st.spinner("Working on it..."):
+            images = generate_images(
+                prompt=image_prompt,
+                num_images=num_images,
+                style_desc=style_map.get(style, ""),
+                guidance=guidance_scale
+            )
         if images:
+            st.success("✅ Images generated!")
             cols = st.columns(3)
-            for i, img in enumerate(images):
-                cols[i % 2].image(img, use_container_width=True)
+            for i, (img, duration) in enumerate(images):
+                cols[i % 3].image(img, use_container_width=True, caption=f"Image {i+1} (⏱️ {duration:.2f}s)")
                 buf = BytesIO()
                 img.save(buf, format="PNG")
                 byte_im = buf.getvalue()
                 st.download_button(
-                    label="Download Image", 
-                    data=byte_im, 
-                    file_name=f"generated_image_{i+1}.png", 
+                    label=f"Download Image {i+1}", 
+                    data=byte_im,
+                    file_name=f"realistic_image_{i+1}.png",
                     mime="image/png"
                 )
     else:
-        st.error("Please enter an image prompt.")
+        st.warning("⚠️ Please enter an image prompt.")
 
 st.markdown("---")
 

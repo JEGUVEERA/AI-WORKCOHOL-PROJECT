@@ -1,19 +1,32 @@
 import streamlit as st
+import json
+import os
 from langchain_google_genai import ChatGoogleGenerativeAI
+from google.oauth2 import service_account
 from dotenv import load_dotenv
 from langchain.agents import Tool, initialize_agent
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
-import re
-import os
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = r"E:\polished-medium-455518-q2-bd49477dc164.json"
-load_dotenv(override=True)
+# Load environment variables for local development
+load_dotenv()
 
-# Initialize the ChatGoogleGenerativeAI model
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+# Load credentials
+if "GOOGLE_CREDENTIALS" in st.secrets:
+    # If running on Streamlit Cloud
+    service_account_info = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+else:
+    # If running locally, get from .env file
+    with open(os.getenv("GOOGLE_CREDENTIALS_PATH")) as f:
+        service_account_info = json.load(f)
 
-# Function to analyze sentiment
+credentials = service_account.Credentials.from_service_account_info(service_account_info)
+
+# Initialize Gemini model
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", credentials=credentials)
+
+
+# Sentiment analysis function
 def analyze_sentiment(text: str) -> str:
     positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
@@ -59,7 +72,7 @@ def analyze_sentiment(text: str) -> str:
      "transformative", "trustworthy", "truthful", "unconditional",
     "unfailing", "unique", "uplifted", "valiant", "versatile", "vibrant",
     "visionary", "vivacious", "warm", "welcoming", "wise", "witty", "wonderful",
-    "worthy", "youthful", "zealous", "zesty"
+    "worthy", "youthful", "zealous", "zesty","good"
 ]
 
     negative_words = [
@@ -112,45 +125,50 @@ def analyze_sentiment(text: str) -> str:
     "conflicting", "distasteful", "unproductive", "blaming", "unsuitable", "tragically", "unfriendly",
     "infuriating", "agonizing", "unrecoverable", "unethical", "paralyzing", "unsolicited", "horrendous",
     "unsound", "unhelpful", "unresolvable", "failing", "unresolved", "lousy", "regretful"
-]
+]    
+    text = text.lower()
+    positive_count = sum(word in text for word in positive_words)
+    negative_count = sum(word in text for word in negative_words)
 
-    
-    positive_count = sum(1 for word in positive_words if word in text.lower())
-    negative_count = sum(1 for word in negative_words if word in text.lower())
-    
     if positive_count > negative_count:
-        return "The sentiment of the text is positive"
+        return "✅ The sentiment of the text is **positive**."
     elif negative_count > positive_count:
-        return "The sentiment of the text is negative"
+        return "⚠️ The sentiment of the text is **negative**."
     else:
-        return "The sentiment of the text is neutral"
+        return "ℹ️ The sentiment of the text is **neutral**."
 
-# Function to generate a creative response
+# Creative response function
 def generate_creative_response(text: str) -> str:
-    return f"Creative response: Imagine a world where '{text}' becomes a theme of a magical story. What adventures would unfold?"
+    return f"✨ *Creative Response*: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
-# Define tools for the agent
+# Define LangChain tools
 tools = [
-    Tool(name="AnalyzeSentiment", func=analyze_sentiment, description="Analyze sentiment of a text (positive, negative, neutral)"),
-    Tool(name="GenerateCreativeResponse", func=generate_creative_response, description="Generate a creative and engaging response based on the input text.")
+    Tool(
+        name="AnalyzeSentiment",
+        func=analyze_sentiment,
+        description="Analyze sentiment of a text (positive, negative, neutral)"
+    ),
+    Tool(
+        name="GenerateCreativeResponse",
+        func=generate_creative_response,
+        description="Generate a creative and engaging response based on the input text"
+    ),
 ]
 
-
-# Initialize memory and prompt template
+# Memory and prompt
 memory = ConversationBufferMemory(memory_key="chat_history")
 prompt_template = PromptTemplate(
     input_variables=["input", "chat_history"],
     template="""
-    You are an advanced text analysis and creative response agent. You have access to the following tools:
-    - AnalyzeSentiment: Analyzes sentiment of the text.
-    - GenerateCreativeResponse: Generate a creative and engaging response based on the input text.
-    Based on the user's input, decide which tool(s) to use and provide a detailed response.
-    Chat History: {chat_history}
-    User Input: {input}
-    """
+You are an advanced text analysis and creative response agent. You have access to the following tools:
+- AnalyzeSentiment: Analyzes sentiment of the text.
+- GenerateCreativeResponse: Generates a creative and engaging response based on the input text.
+Chat History: {chat_history}
+User Input: {input}
+"""
 )
 
-# Initialize the agent
+# Initialize LangChain Agent
 agent = initialize_agent(
     tools=tools,
     llm=llm,
@@ -158,4 +176,5 @@ agent = initialize_agent(
     memory=memory,
     verbose=True
 )
+
 
