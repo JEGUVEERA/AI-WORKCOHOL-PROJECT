@@ -1,6 +1,15 @@
+streamlit==1.44.0
+numpy==1.24.3
+pandas==2.0.0
+matplotlib==3.7.1
 aiohttp==3.11.14
 asyncio==3.4.3
 gTTS==2.5.4
+textblob==0.19.0
+pytrends==4.9.2
+python-dotenv==1.0.1
+pyttsx3==2.98
+requests==2.32.3
 google-generativeai==0.8.4
 langchain==0.3.22
 langchain-core==0.3.49
@@ -11,9 +20,3 @@ ngrok==1.4.0
 ollama==0.4.7
 openai==1.69.0
 pillow==11.1.0
-pyttsx3==2.98
-pytrends==4.9.2
-python-dotenv==1.0.1
-requests==2.32.3
-streamlit==1.44.0
-textblob==0.19.0
