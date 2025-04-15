@@ -17,9 +17,9 @@ from pytrends.request import TrendReq
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import platform
 import time
-import pyttsx3
-from gtts import gTTS
 from dotenv import load_dotenv
+from langdetect import detect
+
 
 
 
@@ -138,20 +138,71 @@ def generate_text_content(ingredients: str) -> str:
 
 
 
-def text_to_speech(text):
-    tts = gTTS(text)
-    audio_buffer = BytesIO()
-    tts.write_to_fp(audio_buffer)
-    audio_buffer.seek(0)
-    return audio_buffer
+# Supported languages by gTTS
+SUPPORTED_LANGUAGES = {
+    "af", "ar", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr",
+    "hu", "id", "is", "it", "ja", "jw", "kn", "ko", "la", "lv", "mk", "ml", "mr", "my", "ne", "nl", "no", "pl", "pt",
+    "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW", "zh"
+}
 
-
-def chat_with_ollama(user_input):
+def text_to_speech(text: str) -> BytesIO:
     try:
-        llm = Ollama(model="llama3.2:1b")
-        return llm(user_input)
+        detected_language = detect(text)
+        if detected_language not in SUPPORTED_LANGUAGES:
+            st.warning(f"⚠️ Detected language '{detected_language}' is not supported. Using English instead.")
+            detected_language = "en"
+
+        tts = gTTS(text=text, lang=detected_language)
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer
+
     except Exception as e:
-        return f"Error: {str(e)}"
+        st.error(f"Text-to-Speech Error: {e}")
+        return None
+
+
+
+# --- Load & Save Chat History ---
+def load_chat_history():
+    try:
+        with open("chat_history.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_chat_history(history):
+    with open("chat_history.json", "w") as f:
+        json.dump(history, f)
+
+# --- Create Chat Entry ---
+def create_chat_history_entry(feature: str, user_input: str, ai_response: str):
+    entry = {"feature": feature, "user": user_input, "ai": ai_response}
+    st.session_state.chat_history.append(entry)
+    save_chat_history(st.session_state.chat_history)
+
+# --- Display Chat History Nicely ---
+def display_chat_history():
+    st.subheader("📜 Previous Conversations")
+    chat_history = st.session_state.get("chat_history", [])
+    
+    if not chat_history:
+        st.info("No chat history available.")
+    else:
+        for i, chat in enumerate(reversed(chat_history), 1):
+            st.markdown(f"""
+            <div style="border: 1px solid #ff4b4b; border-radius: 12px; padding: 16px; margin-bottom: 12px; background-color: #1e1e1e;">
+                <p style="color:#ff4b4b; font-weight:bold;">🔹 Chat #{len(chat_history) - i + 1} - Feature: {chat['feature']}</p>
+                <p><strong>User:</strong> {chat['user']}</p>
+                <p><strong>AI:</strong> {chat['ai']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+# --- Async Query Function (Placeholder) ---
+async def query_ollama_async(prompt):
+    await asyncio.sleep(1)  # Simulate API delay
+    return f"Response to: {prompt}"
 
 
 def generate_multiple_posts(platforms, content):
@@ -250,53 +301,45 @@ if page == "Home":
 
 ############################################### --- Chat Bot --- ###################################################
 
+# --- SESSION STATE INIT ---
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = load_chat_history()
 
-elif page == "Chat Bot":
+if "last_ollama_response" not in st.session_state:
+    st.session_state.last_ollama_response = ""
+
+# --- CHATBOT PAGE ---
+if page == "Chat Bot":
     st.title("🤖 Jeguveera's AI Chat Bot")
-
-    # Initialize session state
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    if "last_ollama_response" not in st.session_state:
-        st.session_state.last_ollama_response = ""
-
-    # Chat input with nice UI
     user_input = st.text_input("Type your message here:")
+
     if user_input:
         st.write("**User:**", user_input)
-
-
         with st.spinner("Ollama API thinking..."):
             try:
                 ollama_response = asyncio.run(query_ollama_async(user_input))
                 st.success("Ollama API 🤖:")
                 st.markdown(ollama_response)
+                
+                # Save to history
+                st.session_state.last_ollama_response = ollama_response
+                create_chat_history_entry("Ollama", user_input, ollama_response)
+
             except Exception as e:
                 st.error(f"Ollama API Error: {e}")
 
-        # --- Ollama Response ---
-        try:
-            with st.chat_message("assistant"):
-                st.subheader("Ollama  🧠:")
-                ollama_response = asyncio.run(query_ollama_async(user_input))
+# --- CHAT HISTORY PAGE ---
+elif page == "Chat History":
+    st.markdown("""
+        <div style="display: flex; align-items: center;">
+            <div style="width: 12px; height: 12px; background-color: red; border-radius: 50%; margin-right: 8px;"></div>
+            <h3 style="margin: 0; color: white;">Chat History</h3>
+        </div>
+    """, unsafe_allow_html=True)
 
-                if "Error: Request timed out." in ollama_response:
-                    st.error(ollama_response)
-                    if st.session_state.last_ollama_response:
-                        st.markdown("Last successful response was:")
-                        st.markdown(st.session_state.last_ollama_response)
-                else:
-                    st.markdown(ollama_response)
-                    st.session_state.last_ollama_response = ollama_response
-                    st.session_state.chat_history.append({
-                        "feature": "Ollama",
-                        "user": user_input,
-                        "ai": ollama_response
-                    })
+    if st.button("Show Chat History"):
+        display_chat_history()
 
-        except Exception as e:
-            with st.chat_message("assistant"):
-                st.error(f"Ollama API Error: {e}")
 
     st.markdown("---")
 
@@ -309,6 +352,7 @@ elif page == "Chat Bot":
 
 
 ###################################################### --- Social Media Post Generator --- #############################################
+
 
 
 elif page == "Social Media Post Generator":
@@ -444,7 +488,6 @@ elif page == "Marketing Content Generator":
                 st.markdown(variant)
         else:
             st.warning("Please enter a marketing topic to generate variants.")
-
 
 
 
@@ -596,65 +639,25 @@ elif page == "Text Analysis & Sentiment Response":
 
 
 
-
 #################################################### --- Text to Speech --- ###################################################
 
+# --- UI: Text to Speech Page ---
 elif page == "Text to Speech":
-    st.title("🔊 Text to Speech Converter")
+    st.title("🔊 Text to Speech Converter (Multilingual)")
 
-    def text_to_speech(text: str, voice: str = "Male") -> str:
-        try:
-            detected_language = detect(text)
-            timestamp = int(time.time())
-            filename = f"output_{timestamp}.mp3"
-
-            if detected_language == "en":
-                # Use pyttsx3 for English
-                engine = pyttsx3.init()
-                voices = engine.getProperty('voices')
-
-                # Set voice based on selection
-                if voice == "Female":
-                    for v in voices:
-                        if "female" in v.name.lower() or "zira" in v.name.lower():
-                            engine.setProperty('voice', v.id)
-                            break
-                else:
-                    for v in voices:
-                        if "male" in v.name.lower():
-                            engine.setProperty('voice', v.id)
-                            break
-
-                wav_filename = f"output_{timestamp}.wav"
-                engine.save_to_file(text, wav_filename)
-                engine.runAndWait()
-                return wav_filename
-
-            else:
-                # Use gTTS for other languages
-                tts = gTTS(text=text, lang=detected_language)
-                tts.save(filename)
-                return filename
-
-        except Exception as e:
-            st.error(f"Text-to-Speech Error: {e}")
-            return None
-
-    # --- Streamlit UI ---
-    tts_text = st.text_area("Enter text to convert to speech:", key="tts_text_area")
-    voice = st.selectbox("Select Voice (English only):", ["Male", "Female"])
+    tts_text = st.text_area("Enter text to convert to speech (supports many languages):", key="tts_text_area")
 
     if st.button("Convert to Speech"):
-        if tts_text:
-            audio_file = text_to_speech(tts_text, voice)
-            if audio_file and os.path.exists(audio_file):
+        if tts_text.strip():
+            audio_buffer = text_to_speech(tts_text)
+            if audio_buffer:
                 st.success("✅ Audio generated successfully!")
-                st.audio(audio_file, format="audio/mp3" if audio_file.endswith(".mp3") else "audio/wav")
-                st.download_button("Download Audio", open(audio_file, "rb"), file_name=os.path.basename(audio_file))
+                st.audio(audio_buffer, format="audio/mp3")
+                st.download_button("Download Audio", audio_buffer, file_name=f"tts_output_{int(time.time())}.mp3")
             else:
                 st.error("Failed to generate audio.")
         else:
-            st.warning("Please enter text to convert to speech.")
+            st.warning("Please enter some text.")
 
 
 
@@ -664,6 +667,7 @@ elif page == "Text to Speech":
 
 
 ############################################# --- Data Visualization --- #############################################
+elif page == "Data Visualization":
 elif page == "Data Visualization":
     st.title("📊 AI Data Visualizer")
     st.markdown("Upload your file (CSV, TXT, Excel) or use a sample dataset to visualize numeric data.")
@@ -771,53 +775,10 @@ elif page == "Data Visualization":
 
 
 
-############################################### --- Chat History --- ######################################################
 
-# --- Function to Load Chat History ---
-def load_chat_history():
-    try:
-        with open("chat_history.json", "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
 
-# --- Function to Save Chat History ---
-def save_chat_history(history):
-    with open("chat_history.json", "w") as f:
-        json.dump(history, f)
 
-# --- Function to Display Chat History ---
-def display_chat_history():
-    if "chat_history" in st.session_state and st.session_state.chat_history:
-        st.subheader("Chat History:")
-        for chat in st.session_state.chat_history:
-            st.markdown("---")
-            st.markdown(f"**Feature:** {chat['feature']}")
-            st.markdown(f"**User:** {chat['user']}")
-            st.markdown(f"**AI:** {chat['ai']}")
-            st.markdown("<br>", unsafe_allow_html=True)
-    else:
-        st.info("No chat history available.")
 
-# --- Function to Create New Entry ---
-def create_chat_history_entry(feature: str, user_input: str, ai_response: str):
-    st.session_state.chat_history.append({"feature": feature, "user": user_input, "ai": ai_response})
-    save_chat_history(st.session_state.chat_history)
-
-# --- Initialize Session State ---
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = load_chat_history()
-
-# --- Display Chat History Page ---
-if page == "Chat History":
-    st.title("Chat History")
-    
-    if st.button("Show Chat History"):
-        display_chat_history()
-        
 if __name__ == "__main__":
     st.write("")
-
-
-
-
+    
