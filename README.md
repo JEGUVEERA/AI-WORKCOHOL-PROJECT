@@ -1,4 +1,14 @@
-﻿﻿# AI-WORKCOHOL-PROJECT
+# AI-WORKCOHOL-PROJECT
+
+
+### 🎥 Demo
+
+[Watch Video on Google Drive](https://vizard.ai/share?code=0fA88F&susId=7805804&utm_source=export_share&utm_medium=export_share_copy_link&utm_campaign=export_share_copy_link)
+
+
+## Overview
+AI Workcohol Project is an AI-powered marketing and content generation platform that leverages multiple AI models including Gemini API, Ollama, and LangChain for creating diverse marketing content and performing text analysis.
+
 
 
 ## Overview
@@ -78,7 +88,7 @@ GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 
 
 
-## Installation of Ollama Models locally
+## Installation of Ollama Models
 To install Ollama and any model from ollama, run the following command:
 
 ```bash
