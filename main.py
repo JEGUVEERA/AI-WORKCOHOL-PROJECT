@@ -248,7 +248,7 @@ if page == "Home":
 
 
 
-# --- Chat Bot ---
+############################################### --- Chat Bot --- ###################################################
 
 
 elif page == "Chat Bot":
@@ -308,7 +308,7 @@ elif page == "Chat Bot":
 
 
 
-# --- Social Media Post Generator ---
+###################################################### --- Social Media Post Generator --- #############################################
 
 
 elif page == "Social Media Post Generator":
@@ -392,7 +392,7 @@ elif page == "Social Media Post Generator":
 
 
 
-# --- Marketing Content Generator ---
+################################################ --- Marketing Content Generator --- ########################################################
 elif page == "Marketing Content Generator":
     st.title("🚀 Marketing Content Generator")
 
@@ -453,7 +453,7 @@ elif page == "Marketing Content Generator":
 
 
 
-# --- Email Content Generator ---
+############################################### --- Email Content Generator --- #################################################
 
 
 
@@ -524,7 +524,7 @@ elif page == "Email Content Generator":
 
 
 
-# --- Sentiment Analysis & Creative Response ---
+############################################# --- Sentiment Analysis & Creative Response --- ###################################################
 elif page == "Text Analysis & Sentiment Response":
     st.title("📝 Text Analysis and Creative Sentiment Response Generator")
     st.markdown("### Enter your text below:")
@@ -597,7 +597,7 @@ elif page == "Text Analysis & Sentiment Response":
 
 
 
-# --- Text to Speech ---#
+#################################################### --- Text to Speech --- ###################################################
 
 elif page == "Text to Speech":
     st.title("🔊 Text to Speech Converter")
@@ -663,7 +663,7 @@ elif page == "Text to Speech":
 
 
 
-# --- Data Visualization ---
+############################################# --- Data Visualization --- #############################################
 elif page == "Data Visualization":
     st.title("📊 AI Data Visualizer")
     st.markdown("Upload your file (CSV, TXT, Excel) or use a sample dataset to visualize numeric data.")
@@ -771,7 +771,7 @@ elif page == "Data Visualization":
 
 
 
-
+############################################### --- Chat History --- ######################################################
 
 # --- Function to Load Chat History ---
 def load_chat_history():
@@ -814,6 +814,10 @@ if page == "Chat History":
     
     if st.button("Show Chat History"):
         display_chat_history()
+        
+if __name__ == "__main__":
+    st.write("")
+
 
 
 
