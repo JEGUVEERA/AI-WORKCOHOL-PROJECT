@@ -78,7 +78,7 @@ GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 
 
 
-## Installation of Ollama Models
+## Installation of Ollama Models locally
 To install Ollama and any model from ollama, run the following command:
 
 ```bash
