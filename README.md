@@ -11,10 +11,6 @@ AI Workcohol Project is an AI-powered marketing and content generation platform 
 
 
 
-## Overview
-AI Workcohol Project is an AI-powered marketing and content generation platform that leverages multiple AI models including Gemini API, Ollama, and LangChain for creating diverse marketing content and performing text analysis.
-
-
 ## Project Structure
 ```
 AI WORKCOHOL PROJECT
