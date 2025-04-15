@@ -1,22 +1,33 @@
-streamlit==1.44.0
-numpy==1.24.3
-pandas==2.0.0
-matplotlib==3.7.1
-aiohttp==3.11.14
-asyncio==3.4.3
-gTTS==2.5.4
-textblob==0.19.0
-pytrends==4.9.2
-python-dotenv==1.0.1
-pyttsx3==2.98
-requests==2.32.3
-google-generativeai==0.8.4
-langchain==0.3.22
-langchain-core==0.3.49
-langchain-community==0.3.20
-langchain_google_genai==2.1.2
-langdetect==1.0.9
-ngrok==1.4.0
-ollama==0.4.7
-openai==1.69.0
-pillow==11.1.0
+# Core Dependencies
+streamlit>=1.28.0
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+aiohttp>=3.9.0
+Pillow>=10.0.0
+textblob>=0.17.1
+pytrends>=4.9.0
+
+# AI & Language Processing
+langchain>=0.0.300
+langchain-core>=0.0.10
+langchain-community>=0.0.10
+langchain-openai>=0.0.2
+langchain-ollama>=0.0.3
+google-generativeai>=0.3.0
+langdetect>=1.0.9
+
+# Text-to-Speech
+gTTS>=2.3.2
+pyttsx3>=2.90
+
+# Data Processing & Visualization
+matplotlib>=3.7.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Optional Dependencies
+openpyxl>=3.1.0
+python-multipart>=0.0.6
