@@ -27,7 +27,7 @@ AI WORKCOHOL PROJECT
 │   ├── Scripts         # Executable scripts
 │   ├── pyvenv.cfg      # Virtual environment config
 │
-├── generate_images     # Directory for AI-generated images
+
 ```
 
 
