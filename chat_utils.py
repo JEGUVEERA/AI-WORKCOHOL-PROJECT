@@ -1,5 +1,4 @@
 import json
-import streamlit as st
 
 # --- Load chat history from file ---
 def load_chat_history():
