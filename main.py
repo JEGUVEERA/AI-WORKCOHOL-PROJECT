@@ -817,6 +817,3 @@ if page == "Chat History":
 
 
 
-if __name__ == "__main__":
-    # Run the Streamlit app
-    st.write("")
