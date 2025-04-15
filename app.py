@@ -780,6 +780,8 @@ elif page == "Data Visualization":
 
 
 
-if __name__ == "__main__":
-    st.write("")
+<<<<<<< HEAD
     
+=======
+    
+>>>>>>> 208c2fb89462127b3c7440d34be0e3e8c896b764
