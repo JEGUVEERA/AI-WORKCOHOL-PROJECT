@@ -278,7 +278,7 @@ tools = [
     ),
 ]
 
-# LangChain memory & prompt
+## LangChain memory & prompt
 memory = ConversationBufferMemory(memory_key="chat_history")
 prompt_template = PromptTemplate(
     input_variables=["input", "chat_history"],
