@@ -523,7 +523,7 @@ elif page == "Text Analysis & Sentiment Response":
 
     user_input = st.text_area("Input Text:", height=150)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = 
 
     # Analyze Sentiment
     if col1.button("Analyze Sentiment"):
