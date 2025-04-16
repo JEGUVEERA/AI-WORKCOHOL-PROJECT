@@ -1,16 +1,38 @@
+# Load environment variables first - must be at the top before any other imports
 import os
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure .env file is loaded from the correct location
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+# Immediately check and validate GEMINI_API_KEY
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if not gemini_api_key:
+    print("❌ GEMINI_API_KEY is missing. Please check your .env or Streamlit secrets.")
+    print("Make sure the format in .env is: GEMINI_API_KEY=your_api_key_here (without quotes)")
+    print(f"Looking for .env file at: {env_path.absolute()}")
+    sys.exit(1)  # Exit the script if the key is missing
+
+# Set the environment variable explicitly in case the dotenv loading had issues
+os.environ["GEMINI_API_KEY"] = gemini_api_key
+
+# Now that environment is set up, import the rest of the modules
 import re
 from collections import defaultdict
-from dotenv import load_dotenv
-from langchain.agents import Tool, initialize_agent
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+from langchain.agents import Tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-load_dotenv()
-
 # Initialize Gemini LLM
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+try:
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+    print("✅ Successfully initialized Gemini LLM")
+except Exception as e:
+    print(f"❌ Error initializing Gemini LLM: {str(e)}")
+    print("Please verify your API key is correct and has appropriate permissions.")
+    sys.exit(1)
 
 # Simplified example positive/negative keywords
 positive_words = [
@@ -221,9 +243,17 @@ emotion = {
     "positive": positive_words,
     "negative": negative_words,
 }
-
 # Sentiment and emotion analyzer
 def analyze_sentiment_and_emotion(text: str) -> str:
+    """
+    Analyzes the sentiment and emotions in a given text.
+    
+    Args:
+        text (str): The input text to analyze
+        
+    Returns:
+        str: A formatted string containing sentiment analysis and emotion detection results
+    """
     text_lower = text.lower()
     words = re.findall(r'\b\w+\b', text_lower)
     emotion_counts = defaultdict(int)
@@ -262,6 +292,16 @@ def analyze_sentiment_and_emotion(text: str) -> str:
 
 # Creative response function
 def generate_creative_response(text: str) -> str:
+    """
+    Generates a creative response based on the input text.
+    
+    Args:
+        text (str): The input text to respond to
+        
+    Returns:
+        str: A creative response to the input text
+    """
+    return f"✨ *Creative Response*: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
     return f"✨ *Creative Response*: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
 # Define LangChain tools
@@ -279,22 +319,85 @@ tools = [
 ]
 
 ## LangChain memory & prompt
-memory = ConversationBufferMemory(memory_key="chat_history")
-prompt_template = PromptTemplate(
-    input_variables=["input", "chat_history"],
-    template="""You are an advanced text analysis and creative response agent. You have access to the following tools:
-- AnalyzeSentimentAndEmotion: Analyzes sentiment of the text and detects nuanced emotional tones.
-- GenerateCreativeResponse: Generates a creative and engaging response based on the input text.
-Chat History: {chat_history}
-User Input: {input}
-"""
+# Use simpler ReAct agent pattern compatible with Gemini
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_core.prompts import PromptTemplate
+from typing import List, Dict, Any
+
+# Extract tool names for the prompt template
+tool_names = [tool.name for tool in tools]
+tool_names_str = ", ".join(tool_names)
+
+# Create a simpler ReAct prompt template
+template = """You are an advanced text analysis and creative response agent specialized in sentiment analysis and creative writing.
+
+You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:"""
+
+# Create a simple prompt using the ReAct format
+prompt = PromptTemplate.from_template(template)
+
+# Create a ReAct agent compatible with Gemini
+agent = create_react_agent(
+    llm=llm,
+    tools=tools,
+    prompt=prompt
 )
 
-# Initialize LangChain Agent
-agent = initialize_agent(
+# Initialize the AgentExecutor with proper configuration
+agent_executor = AgentExecutor.from_agent_and_tools(
+    agent=agent,
     tools=tools,
-    llm=llm,
-    agent="conversational-react-description",
-    memory=memory,
-    verbose=True
+    verbose=True,
+    handle_parsing_errors=True,
+    max_iterations=10,  # Set a reasonable limit for iterations
+    early_stopping_method="generate",  # Stop if a final answer is generated
 )
+# Simple test case to demonstrate functionality
+if __name__ == "__main__":
+    """
+    Main execution block for testing the sentiment analysis and creative response functionality.
+    This will run three example queries to demonstrate different capabilities of the agent.
+    """
+    print("Testing sentiment analysis and creative response functionality...")
+    
+    try:
+        print("\nExample 1: Positive sentiment")
+        result1 = agent_executor.invoke(
+            {"input": "I'm really happy with the progress we've made today!"}
+        )
+        print("\nResult:", result1["output"])
+        
+        print("\nExample 2: Mixed sentiment")
+        result2 = agent_executor.invoke(
+            {"input": "I was frustrated earlier, but now I'm feeling confident about our project."}
+        )
+        print("\nResult:", result2["output"])
+        
+        print("\nExample 3: Creative response")
+        result3 = agent_executor.invoke(
+            {"input": "Can you give me a creative response about dreams and aspirations?"}
+        )
+        print("\nResult:", result3["output"])
+        
+        print("\nTest completed. You can now interact with the agent in your application.")
+    except Exception as e:
+        print(f"Error during testing: {str(e)}")
+        print("Check your API key and other configurations if you're experiencing issues.")
