@@ -6,6 +6,8 @@ import random
 import os
 import json
 import requests
+import asyncio
+import aiohttp
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
@@ -13,164 +15,172 @@ from gtts import gTTS
 from textblob import TextBlob
 from pytrends.request import TrendReq
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import platform
 import time
+from dotenv import load_dotenv
 from langdetect import detect
 
-# Configure logging for API requests
+
+
+
+
+# LangChain & AI Imports
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_community.llms import Ollama
+from langchain.chains import LLMChain
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_community.llms import OpenAI
+from langchain.prompts import PromptTemplate
+import google.generativeai as genai
+#from langchain.chat_models import ChatOpenAI
+from langchain.chains import LLMChain
+from langdetect import detect
+from langchain_openai import OpenAI
+from langchain_ollama import OllamaLLM
+
+
+
+
+# Custom Modules
+from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
+
+from chat_utils import load_chat_history, save_chat_history, display_chat_history
+
+
+
+
+
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+# Load environment variables
 
-# Google Generative AI Import
-import google.generativeai as genai
-
-# Custom sentiment functions (replacing external dependency for cloud deployment)
-def analyze_sentiment_and_emotion(text):
-    try:
-        # Use TextBlob for basic sentiment analysis
-        analysis = TextBlob(text)
-        polarity = analysis.sentiment.polarity
-        
-        # Determine sentiment
-        if polarity > 0.1:
-            sentiment = "positive"
-        elif polarity < -0.1:
-            sentiment = "negative"
-        else:
-            sentiment = "neutral"
-            
-        # Simplified response
-        return f"The text expresses a {sentiment} sentiment with polarity score {polarity:.2f}."
-    except Exception as e:
-        return f"Error analyzing sentiment: {str(e)}"
-
-def generate_creative_response(text):
-    try:
-        # Get basic sentiment
-        analysis = TextBlob(text)
-        polarity = analysis.sentiment.polarity
-        
-        # Generate creative response using Gemini
-        prompt = f"""
-        Create a creative and empathetic response to this text: "{text}"
-        Make it thoughtful and relevant to the content.
-        Keep your response concise (2-3 sentences).
-        """
-        
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Error generating creative response: {str(e)}"
-
-def agent(input_data):
-    """Simple agent function to replace the external dependency"""
-    text = input_data.get("input", "")
-    sentiment_analysis = analyze_sentiment_and_emotion(text)
-    return {
-        "output": f"Based on my analysis: {sentiment_analysis}",
-        "sentiment": sentiment_analysis
-    }
-
-# Configure model settings
-USE_OLLAMA = False  # Set to True if you want to use Ollama
-
-# Get API key from Streamlit secrets
-try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    # Fallback to .env file for local development
+if os.getenv("ENV") != "production":
     load_dotenv()
+    
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    
+    # Check if the keys are set
+else:
+    
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
+    
+# Check API keys
 
-# Configure Ollama (if enabled)
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
-
-# Check API key
 if not GEMINI_API_KEY:
-    st.error("❌ GEMINI_API_KEY is missing. Please check your Streamlit secrets or .env file.")
+    st.error("❌ GEMINI_API_KEY is missing. Please check your .env or Streamlit secrets.")
     st.stop()
 
-# Configure Google Generative AI
+
+
+
+
+
+# --- LangChai
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
-# Configure Streamlit
-st.set_page_config(page_title=" AI FOR MARKETING ", layout="wide")
-st.sidebar.title("🚀 AI FOR MARKETING ")
-# --- Add text-to-speech function
-def text_to_speech(text):
+# --- Initialize LangChain LLM ---
+llm = OpenAI(temperature=0.7, openai_api_key=GEMINI_API_KEY)
+
+# --- LangChain Prompt Template ---
+prompt_template = PromptTemplate(
+    input_variables=["ingredients"],
+    template=(
+        "You are an AI agent for Marketing. "
+        "Generate only marketing content (slogans, ad copy, campaign ideas, marketing ideas) based on the following input: {ingredients}. "
+        "commentary and details should be included."
+        "Input: {ingredients}\n\n"
+        "Output:"
+    )
+)
+
+# --- LangChain LLM Chain ---
+llm_chain = LLMChain(llm=llm, prompt=prompt_template)
+
+def generate_text_content(ingredients: str) -> str:
     try:
-        # Detect language
-        language = detect(text)
-        tts = gTTS(text=text, lang=language, slow=False)
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        return audio_buffer
+        response = llm_chain.run(ingredients=ingredients)
+        return response
     except Exception as e:
-        st.error(f"TTS Error: {e}")
-        return None
+        st.error(f"Error generating text content: {e}")
+        return "Error generating content."
 
-# --- Function to generate text content with selected model
+
+
 def generate_text_content(ingredients: str) -> str:
     prompt = (
         "You are an AI agent for Marketing. "
         "Generate only marketing content (slogans, ad copy, campaign ideas) based on the following input: "
-        "no need to generate extra information generate according the prompt. "
-        "Do include any extra commentary only related to prompt details and Do not include codes for any content unless I ask for codes. "
-        "and real-time information should be generated, AI should be able to generate content based on the user's input and like human. "
-        "only marketing content should be generated based on the user's input and according to user's input generate it no need extra information. "
-        "and generate only real-time and real-world information based on the user's input. and it should be like created by human not AI. "
-        "generate only according to the prompt. "
-        "if user given marketing slogans prompt then just generate only marketing slogans prompt information no more information. "
-        "if user given ad copy prompt then just generate only ad copy prompt information no more information. "
-        "if user given campaign ideas prompt then just generate only campaign ideas prompt information no more information. "
-        "if user given slogans prompt then just generate only slogans prompt information no more information. "
-        "if user given ideas prompt then just generate only ideas prompt information no more information. "
-        "if user given any other prompt then just generate information based on that prompt. "
-        "commentary and details should be included. "
+        "no need to generate extra information generate according the prompt"
+        "Do include any extra commentary only related to prompt details and Do not include codes for any content unless I ask for codes."
+        "and real-time information should be generated , AI should be able to generate content based on the user's input and like human."
+        "only marketing content should be generated based on the user's input and according to user's input generate it no need extra information."
+        " and generate only real-time and reai-world information based on the user's input. and it should be like created by human not AI"
+        "generate only according to the prompt"
+        " if user given marketing slogans prompt then just generate only marketing slogans prompt information no more information."
+        " if user given ad copy prompt then just generate only ad copy prompt information no more information"
+        " if user given campaign ideas prompt then just generate only campaign ideas prompt information no more information"
+        " if user given slogans prompt then just generate only  slogans prompt information no more information."
+        " if user given ideas prompt then just generate only ideas prompt information no more information"
+        "if user given any other prompt then just generate information based on that prompt."
+        "commentary and details should be included."
         f"{ingredients}."
     )
-    
-    # Try using Ollama first if enabled
-    if USE_OLLAMA:
-        try:
-            logger.info("Attempting to use Ollama for content generation")
-            headers = {"Content-Type": "application/json"}
-            data = {
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False
-            }
-            
-            try:
-                response = requests.post(OLLAMA_URL, json=data, headers=headers, timeout=10)
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get("response", "No response from Ollama")
-                else:
-                    logger.warning(f"Ollama returned status code {response.status_code}. Falling back to Gemini.")
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"Error connecting to Ollama: {e}. Falling back to Gemini.")
-        except Exception as e:
-            logger.error(f"Unexpected error with Ollama: {e}. Falling back to Gemini.")
-    
-    # Fallback to Gemini
     try:
-        logger.info("Using Gemini for content generation")
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
         st.error(f"Error generating text content: {e}")
         return "Error generating content."
 
+
+
+# Supported languages by gTTS
+SUPPORTED_LANGUAGES = {
+    "af", "ar", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr",
+    "hu", "id", "is", "it", "ja", "jw", "kn", "ko", "la", "lv", "mk", "ml", "mr", "my", "ne", "nl", "no", "pl", "pt",
+    "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW", "zh"
+}
+
+def text_to_speech(text: str) -> BytesIO:
+    try:
+        detected_language = detect(text)
+        if detected_language not in SUPPORTED_LANGUAGES:
+            st.warning(f"⚠️ Detected language '{detected_language}' is not supported. Using English instead.")
+            detected_language = "en"
+
+        tts = gTTS(text=text, lang=detected_language)
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer
+
+    except Exception as e:
+        st.error(f"Text-to-Speech Error: {e}")
+        return None
+
+
+
+# --- Load & Save Chat History ---
+def load_chat_history():
+    try:
+        with open("chat_history.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_chat_history(history):
+    with open("chat_history.json", "w") as f:
+        json.dump(history, f)
+
 # --- Create Chat Entry ---
 def create_chat_history_entry(feature: str, user_input: str, ai_response: str):
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    
     entry = {"feature": feature, "user": user_input, "ai": ai_response}
     st.session_state.chat_history.append(entry)
+    save_chat_history(st.session_state.chat_history)
 
 # --- Display Chat History Nicely ---
 def display_chat_history():
@@ -188,12 +198,17 @@ def display_chat_history():
                 <p><strong>AI:</strong> {chat['ai']}</p>
             </div>
             """, unsafe_allow_html=True)
-def generate_multiple_posts(platforms, content, tone="Professional"):
+
+# --- Async Query Function (Placeholder) ---
+async def query_ollama_async(prompt):
+    await asyncio.sleep(1)  # Simulate API delay
+    return f"Response to: {prompt}"
+
+
+def generate_multiple_posts(platforms, content):
     results = {}
     with ThreadPoolExecutor() as executor:
-        futures = {}
-        for platform in platforms:
-            futures[executor.submit(generate_social_media_post, platform, content, tone)] = platform
+        futures = {executor.submit(generate_social_media_post, platform, content): platform for platform in platforms}
         for future in as_completed(futures):
             platform = futures[future]
             try:
@@ -203,36 +218,128 @@ def generate_multiple_posts(platforms, content, tone="Professional"):
     return results
 
 
+# Configure Streamlit
+st.set_page_config(page_title=" AI FOR MARKETING ", layout="wide")
+st.sidebar.title("🚀 AI FOR MARKETING ")
 
 
 
-# Initialize session state
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+
+
+
+# --- AI Model (LangChain) ---
+llm = OllamaLLM(model="llama3.2:1b")
+output_parser = StrOutputParser()
+
+prompt = ChatPromptTemplate.from_messages([
+    SystemMessage(content=(
+        "You are Jeguveera's AI assistant. "
+        "Your job is to generate professional, human-like, real-world content. "
+        "Generate high-quality, real-world marketing content. "
+        "Only provide responses that sound human-made, persuasive, and relevant to the user's request. "
+        "Commentary and details should be included. "
+        "Generate complex and detailed content."
+    )),
+    HumanMessage(content="User query: {query}")
+])
+
+chain = prompt | llm | output_parser
+
+# --- Ollama API Query ---
+
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+headers = {"Content-Type": "application/json"}
+data = {"model": "llama3.2:1b", "prompt": "Hello, how are you?", "stream": False}
+response = requests.post(OLLAMA_URL, json=data, headers=headers)
+print("Ollama API returned:", response.json())
+
+async def query_ollama_async(query):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                OLLAMA_URL,
+                json={
+                    "model": "llama3.2:1b",
+                    "prompt": query,
+                    "stream": False
+                },
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status != 200:
+                    return f"Error: Status code {response.status} from Ollama API."
+
+                response_json = await response.json()
+                return response_json.get("response", "No response field in Ollama output.")
+    except asyncio.TimeoutError:
+        return "Error: Request timed out."
+    except Exception as e:
+        return f"Error: Ollama API connection failed. {str(e)}"
+
+
+
+
+
 
 # --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
-    "Home", "Social Media Post Generator", "Marketing Content Generator",
+    "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
     "Email Content Generator", "Text Analysis & Sentiment Response", 
     "Text to Speech", "Data Visualization", "Chat History"
 ])
-# --- Home Page ---
+
 if page == "Home":
     st.title("WELCOME TO AI FOR MARKETING")
     st.write("A powerful AI toolset for content generation and analysis.")
-    try:
-        st.image("AI FOR MARKETING AND AI CONTENT HUB poster.png", 
-                caption="AI-Powered Creativity", 
-                width=700)
-    except:
-        st.info("Welcome to the AI for Marketing tool. Choose a feature from the sidebar to get started.")
+    st.image("AI FOR MARKETING AND AI CONTENT HUB poster.png", 
+             caption="AI-Powered Creativity", 
+             width=600)
+
+
+
+
+
+
+# --- Chat Bot ---
+
+# --- SESSION STATE INIT ---
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = load_chat_history()
+
+if "last_ollama_response" not in st.session_state:
+    st.session_state.last_ollama_response = ""
+
+# --- CHATBOT PAGE ---
+if page == "Chat Bot":
+    st.title("🤖 Jeguveera's AI Chat Bot")
+    user_input = st.text_input("Type your message here:")
+
+    if user_input:
+        st.write("**User:**", user_input)
+        with st.spinner("Ollama API thinking..."):
+            try:
+                ollama_response = asyncio.run(query_ollama_async(user_input))
+                st.success("Ollama API 🤖:")
+                st.markdown(ollama_response)
+                
+                # Save to history
+                st.session_state.last_ollama_response = ollama_response
+                create_chat_history_entry("Ollama", user_input, ollama_response)
+
+            except Exception as e:
+                st.error(f"Ollama API Error: {e}")
 
 # --- CHAT HISTORY PAGE ---
-elif page == "Data Visualization":
-    st.title("📊 AI Data Visualizer")
-    st.markdown("Upload your file (CSV, TXT, Excel) or use a sample dataset to visualize numeric data.")
+elif page == "Chat History":
+    st.markdown("""
+        <div style="display: flex; align-items: center;">
+            <div style="width: 12px; height: 12px; background-color: red; border-radius: 50%; margin-right: 8px;"></div>
+            <h3 style="margin: 0; color: white;">Chat History</h3>
+        </div>
+    """, unsafe_allow_html=True)
+
     if st.button("Show Chat History"):
         display_chat_history()
+
 
     st.markdown("---")
 
@@ -283,33 +390,7 @@ elif page == "Social Media Post Generator":
             f"Content: {content}. Make it engaging and suitable for {platform}. "
             "Add emojis, hashtags, and a clear CTA. Write like a human."
         )
-        
-        # Try using Ollama first if enabled
-        if USE_OLLAMA:
-            try:
-                logger.info(f"Attempting to use Ollama for {platform} post generation")
-                headers = {"Content-Type": "application/json"}
-                data = {
-                    "model": OLLAMA_MODEL,
-                    "prompt": prompt,
-                    "stream": False
-                }
-                
-                try:
-                    response = requests.post(OLLAMA_URL, json=data, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        result = response.json()
-                        return result.get("response", "No response from Ollama")
-                    else:
-                        logger.warning(f"Ollama returned status code {response.status_code}. Falling back to Gemini.")
-                except requests.exceptions.RequestException as e:
-                    logger.warning(f"Error connecting to Ollama: {e}. Falling back to Gemini.")
-            except Exception as e:
-                logger.error(f"Unexpected error with Ollama: {e}. Falling back to Gemini.")
-        
-        # Fallback to Gemini
         try:
-            logger.info(f"Using Gemini for {platform} post generation")
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
@@ -395,7 +476,7 @@ elif page == "Marketing Content Generator":
             f"Create a {selected_style} marketing copy based on the following topic: {topic}. "
             "Make it catchy, compelling, and audience-focused. Keep it concise and effective."
         )
-        return generate_text_content(prompt)
+        return generate_text_content(prompt)  # Assuming same function used for text generation
 
     if st.button("Generate Marketing Variants (A/B Test)"):
         if marketing_topic:
@@ -448,76 +529,37 @@ elif page == "Email Content Generator":
             prompt += "Include a clear and compelling Call-To-Action at the end. "
         prompt += "Only generate the email—no extra explanation or metadata."
 
-        # Try using Ollama first if enabled
-        if USE_OLLAMA:
-            try:
-                logger.info("Attempting to use Ollama for email content generation")
-                headers = {"Content-Type": "application/json"}
-                data = {
-                    "model": OLLAMA_MODEL,
-                    "prompt": prompt,
-                    "stream": False
-                }
-                
-                response = requests.post(OLLAMA_URL, json=data, headers=headers, timeout=10)
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get("response", "No response from Ollama")
-                else:
-                    logger.warning(f"Ollama returned status code {response.status_code}. Falling back to Gemini.")
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"Error connecting to Ollama: {e}. Falling back to Gemini.")
-            except Exception as e:
-                logger.error(f"Unexpected error with Ollama: {e}. Falling back to Gemini.")
-        
-        # Fallback to Gemini
         try:
-            logger.info("Using Gemini for email content generation")
             response = model.generate_content(prompt)
-            if response and hasattr(response, 'text'):
-                return response.text
-            else:
-                logger.error("Received invalid response from Gemini")
-                return "Unable to generate email content."
+            return response.text.strip()
         except Exception as e:
-            logger.error(f"Error generating email content with Gemini: {e}")
             st.error(f"Error generating email content: {e}")
-            return "Error generating email content."
+            return "Error generating email."
 
     # Generate Button
     if st.button("Generate Email"):
-        if not email_subject or not email_body:
-            st.error("Please enter both the subject and the body to generate an email.")
+        if email_subject and email_body:
+            st.subheader("📩 AI-Generated Email Content")
+            for i in range(num_variants):
+                variant_tone = tone
+                if num_variants > 1:
+                    variant_tone = random.choice(["Formal", "Casual", "Playful", "Professional"])
+                    st.markdown(f"### ✨ Variant {i+1} ({variant_tone})")
+
+                email_result = generate_email_content(email_subject, email_body, variant_tone, emoji_boost, include_cta)
+
+                with st.expander(f"📬 View Variant {i+1}"):
+                    st.markdown(email_result)
+                    st.code(email_result, language="markdown")
+
+                    st.download_button(
+                        label="📥 Download Email",
+                        data=email_result,
+                        file_name=f"email_variant_{i+1}.txt",
+                        mime="text/plain"
+                    )
         else:
-            with st.spinner("Generating email content..."):
-                try:
-                    st.subheader("📩 AI-Generated Email Content")
-                    for i in range(num_variants):
-                        variant_tone = tone
-                        if num_variants > 1:
-                            variant_tone = random.choice(["Formal", "Casual", "Playful", "Professional"])
-                            st.markdown(f"### ✨ Variant {i+1} ({variant_tone})")
-
-                        email_result = generate_email_content(email_subject, email_body, variant_tone, emoji_boost, include_cta)
-
-                        if email_result and not email_result.startswith("Error"):
-                            with st.expander(f"📬 View Variant {i+1}"):
-                                st.markdown(email_result)
-                                st.code(email_result, language="markdown")
-
-                                st.download_button(
-                                    label="📥 Download Email",
-                                    data=email_result,
-                                    file_name=f"email_variant_{i+1}.txt",
-                                    mime="text/plain"
-                                )
-                    
-                    # Save to chat history
-                    create_chat_history_entry("Email Generator", f"Subject: {email_subject}", f"Generated {num_variants} email variants")
-                    st.success(f"Successfully generated {num_variants} email variant(s)!")
-                except Exception as e:
-                    st.error(f"An error occurred while generating email content: {e}")
-                    logger.error(f"Email generation error: {e}")
+            st.error("Please enter both the subject and the body to generate an email.")
 
 
 
@@ -550,19 +592,19 @@ elif page == "Text Analysis & Sentiment Response":
             st.warning("Please enter some text for sentiment analysis.")
 
     # Creative AI Response
+        # Creative AI Response
     if col2.button("Generate Creative Response"):
         if user_input:
-            agent_response = agent({"input": user_input})
+            agent_response = agent.run(user_input)
             creative_response = generate_creative_response(user_input)
             # Display the response in structured format
             st.subheader("🎨 Creative Response")
             st.markdown(f"*Action:* GenerateCreativeResponse")
             st.markdown(f"*Action Input:* {user_input}")
-            st.markdown(f"*Generated Response:* {agent_response.get('output', 'No response generated')}")
+            st.markdown(f"*Generated Response:* {agent_response}")
             st.subheader("✨ Creative Response")
             st.markdown(f"*Generated Creative Response:* {creative_response}")
         else:
-            st.warning("Please enter some text for creative response generation.")
             st.warning("Please enter some text for creative response generation.")
 
 
@@ -598,7 +640,9 @@ elif page == "Text Analysis & Sentiment Response":
 
 
 
-# --- Text to Speech ---
+# --- Text to Speech ---#
+
+# --- UI: Text to Speech Page ---
 elif page == "Text to Speech":
     st.title("🔊 Text to Speech Converter (Multilingual)")
 
@@ -611,8 +655,6 @@ elif page == "Text to Speech":
                 st.success("✅ Audio generated successfully!")
                 st.audio(audio_buffer, format="audio/mp3")
                 st.download_button("Download Audio", audio_buffer, file_name=f"tts_output_{int(time.time())}.mp3")
-                # Save to history
-                create_chat_history_entry("Text to Speech", tts_text, "Audio generated successfully")
             else:
                 st.error("Failed to generate audio.")
         else:
