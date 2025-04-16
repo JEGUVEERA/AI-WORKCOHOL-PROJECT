@@ -242,7 +242,7 @@ if page == "Home":
     st.write("A powerful AI toolset for content generation and analysis.")
     st.image("AI FOR MARKETING AND AI CONTENT HUB poster.png", 
              caption="AI-Powered Creativity", 
-             width=600
+             width=600)
 
 
 
