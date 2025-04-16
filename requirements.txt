@@ -1,14 +1,14 @@
 # Core Dependencies
-streamlit==5.5.0
+streamlit==1.44.0
 numpy==2.1.3
 pandas==2.2.3
 matplotlib==3.10.1
-python-dotenv==1.0.0
-requests==2.31.0
+python-dotenv==1.0.1
+requests==2.32.3
 aiohttp==3.11.14
 Pillow==11.1.0
-textblob==0.17.1
-pytrends==4.9.0
+textblob==0.19.0
+pytrends==4.9.2
 
 # AI & Language Processing
 langchain==0.3.23
@@ -24,20 +24,15 @@ langdetect==1.0.9
 # Text-to-Speech
 gTTS==2.5.4
 
-
-# Data Processing & Visualization
-matplotlib==3.10.1
-numpy==2.1.3
-pandas==2.2.3
+# Data Visualization
 plotly==6.0.1
 altair==5.5.0
 
 # Optional Dependencies
 openpyxl==3.1.5
-python-multipart==0.0.6
+python-multipart==0.0.20
 
 # Additional Required Dependencies
-asyncio==3.4.3
 colorama==0.4.6
 jsonschema==4.23.0
 protobuf==5.29.4
