@@ -278,11 +278,10 @@ tools = [
     )
 ]
 
-# Initialize agent
+#   verbose=True
 agent = initialize_agent(
-    tools=tools,
+    tools=tools,  # ✅ Use the actual tools list
     llm=model,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True
 )
-
