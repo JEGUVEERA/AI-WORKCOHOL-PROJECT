@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import random
 import os
 import json
+import requests
 import asyncio
+import aiohttp
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
@@ -256,25 +258,27 @@ if "chat_history" not in st.session_state:
 if "last_ollama_response" not in st.session_state:
     st.session_state.last_ollama_response = ""
 
-# --- CHATBOT PAGE ---
+# --- Chat Bot Page ---
 if page == "Chat Bot":
     st.title("🤖 Jeguveera's AI Chat Bot")
     user_input = st.text_input("Type your message here:")
 
     if user_input:
-        st.write("*User:*", user_input)
-        with st.spinner("Ollama API thinking..."):
+        st.write("**User:**", user_input)
+        with st.spinner("Gemini API thinking..."):
             try:
-                ollama_response = asyncio.run(query_ollama_async(user_input))
-                st.success("Ollama API 🤖:")
-                st.markdown(ollama_response)
+                # Use Gemini model to generate a response
+                prompt = f"You are a helpful AI assistant. Respond to the following input: {user_input}"
+                response = model.generate_content(prompt).text
+                st.success("AI Response:")
+                st.markdown(response)
                 
-                # Save to history
-                st.session_state.last_ollama_response = ollama_response
-                create_chat_history_entry("Ollama", user_input, ollama_response)
-
+                # Save to chat history
+                create_chat_history_entry("Chat Bot", user_input, response)
             except Exception as e:
-                st.error(f"Ollama API Error: {e}")
+                st.error(f"Gemini API Error: {e}")
+
+
 
 # --- CHAT HISTORY PAGE ---
 elif page == "Chat History":
