@@ -16,7 +16,7 @@ positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
     "welcoming", "wise", "witty", "worthy", "youthful", "zealous", "zesty", "good","happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
     "fantastic", "grateful", "harmonious", "inspiring", "jubilant", "kind", "lively", "marvelous", "optimistic",
-    "peaceful", "radiant", "spectacular", "thriving", "uplifting", "victorious", "warmhearted", "zealous",
+    "peaceful", "radiant", "spectacular", "thriving", "uplifting","uplifting", "victorious", "warmhearted", "zealous",
     "accomplished", "admirable", "affectionate", "authentic", "benevolent", "blessed", "bountiful", "buoyant",
     "calm", "charming", "compassionate", "confident", "courageous", "courteous", "dazzling", "dedicated",
     "determined", "dynamic", "eager", "effervescent", "elevated", "empowered", "enchanting", "energetic",
