@@ -11,7 +11,7 @@ load_dotenv()
 # Initialize Gemini LLM
 model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
-## Simplified example positive/negative keywords
+# Simplified example positive/negative keywords
 positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
     "welcoming", "wise", "witty", "worthy", "youthful", "zealous", "zesty", "good","happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
