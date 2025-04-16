@@ -515,10 +515,6 @@ elif page == "Email Content Generator":
 
 
 
-
-
-
-
 # --- Sentiment Analysis & Creative Response ---
 elif page == "Text Analysis & Sentiment Response":
     st.title("📝 Text Analysis and Creative Sentiment Response Generator")
@@ -544,11 +540,10 @@ elif page == "Text Analysis & Sentiment Response":
             st.warning("Please enter some text for sentiment analysis.")
 
     # Creative AI Response
-        # Creative AI Response
     if col2.button("Generate Creative Response"):
         if user_input:
             agent_response = agent.run(user_input)
-            creative_response = generate_poetic_response(user_input)
+            creative_response = generate_poetic_response(user_input, sentiment_and_emotion["sentiment"])  # Sentiment is passed here
             # Display the response in structured format
             st.subheader("🎨 Creative Response")
             st.markdown(f"Action: GenerateCreativeResponse")
@@ -559,7 +554,6 @@ elif page == "Text Analysis & Sentiment Response":
         else:
             st.warning("Please enter some text for creative response generation.")
 
-
     # Agent Debug Trace
     if col3.button("Agent Debug Trace"):
         if user_input:
@@ -568,7 +562,6 @@ elif page == "Text Analysis & Sentiment Response":
             sentiment = analyze_sentiment_and_emotion(user_input)
             agent_output = response.get("output", "No direct output from agent")
             
-
         # UI Section
         st.subheader("🤖 Agent Debug Trace")
 
@@ -583,8 +576,9 @@ elif page == "Text Analysis & Sentiment Response":
 
         # Sentiment Badge
         st.markdown("### 🏷 Sentiment Result")
-        sentiment_color = "🟢 Positive" if "positive" in sentiment.lower() else "🔴 Negative" if "negative" in sentiment.lower() else "🟡 Neutral"
-        st.success(f"Sentiment Analysis: *{sentiment_color}* — {sentiment}")
+        sentiment_color = "🟢 Positive" if "positive" in sentiment["sentiment"].lower() else "🔴 Negative" if "negative" in sentiment["sentiment"].lower() else "🟡 Neutral"
+        st.success(f"Sentiment Analysis: *{sentiment_color}* — {sentiment['sentiment']}")
+
 
 
 

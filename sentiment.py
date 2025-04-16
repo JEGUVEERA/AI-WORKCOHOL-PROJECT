@@ -257,10 +257,11 @@ def analyze_sentiment_and_emotion(text: str) -> dict:
         "emotion": emotion_label,
         "counts": dict(emotion_counts)
     }
-
-def generate_poetic_response(text: str, sentiment: str) -> str:
+def generate_poetic_response(text: str) -> str:
+    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
+
 
 tools = [
     Tool(
