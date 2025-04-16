@@ -517,6 +517,7 @@ elif page == "Email Content Generator":
 
 
 # --- Sentiment Analysis & Creative Response ---
+
 elif page == "Text Analysis & Sentiment Response":
     st.title("📝 Text Analysis and Creative Sentiment Response Generator")
     st.markdown("### Enter your text below:")
