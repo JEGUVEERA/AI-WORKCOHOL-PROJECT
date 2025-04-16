@@ -1,3 +1,4 @@
+
 import re
 from collections import defaultdict
 from dotenv import load_dotenv
@@ -11,7 +12,6 @@ load_dotenv()
 # Initialize Gemini LLM
 model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
-# Simplified example positive/negative keywords
 positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
     "welcoming", "wise", "witty", "worthy", "youthful", "zealous", "zesty", "good","happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
@@ -221,24 +221,30 @@ emotion = {
     "negative": negative_words,
 }
 
-def analyze_sentiment_and_emotion(text: str) -> dict:
+
+    def analyze_sentiment_and_emotion(text: str) -> dict:
     text_lower = text.lower()
     words = set(re.findall(r'\b\w+\b', text_lower))
     emotion_counts = defaultdict(int)
 
     for emo_label, word_list in emotion.items():
         for word in word_list:
-            if ' ' in word:
-                if word in text_lower:
-                    emotion_counts[emo_label] += 1
+            if ' ' in word and word in text_lower:
+                emotion_counts[emo_label] += 1
             elif word in words:
                 emotion_counts[emo_label] += 1
 
-    pos, neg = emotion_counts.get("positive", 0), emotion_counts.get("negative", 0)
-    sentiment = "Positive" if pos > neg else "Negative" if neg > pos else "Mixed" if pos == neg and pos > 0 else "Neutral"
+    pos = emotion_counts.pop("positive", 0)
+    neg = emotion_counts.pop("negative", 0)
 
-    emotion_counts.pop("positive", None)
-    emotion_counts.pop("negative", None)
+    if pos > neg:
+        sentiment = "Positive"
+    elif neg > pos:
+        sentiment = "Negative"
+    elif pos == neg and pos > 0:
+        sentiment = "Mixed"
+    else:
+        sentiment = "Neutral"
 
     emotion_label = max(emotion_counts.items(), key=lambda x: x[1], default=("Neutral", 0))[0]
 
@@ -253,22 +259,15 @@ def generate_poetic_response(text: str) -> str:
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
 
+# LangChain Agent Setup
 tools = [
-    Tool(
-        name="SentimentEmotionTool",
-        func=analyze_sentiment_and_emotion,
-        description="Analyzes sentiment and emotion in a given text"
-    ),
-    Tool(
-        name="PoeticResponseTool",
-        func=generate_poetic_response,
-        description="Generates poetic response based on sentiment"
-    )
+    Tool(name="SentimentEmotionTool", func=analyze_sentiment_and_emotion, description="Analyze sentiment/emotion."),
+    Tool(name="PoeticResponseTool", func=generate_poetic_response, description="Generate poetic response.")
 ]
 
 agent = initialize_agent(
     tools=tools,
     llm=model,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
+    verbose=False
 )
