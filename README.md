@@ -129,7 +129,7 @@ ollama pull llama3.2:1b
 To run the Streamlit application, use the following command:
 
 ```bash
-streamlit run main.py
+streamlit run app.py
 ```
 
 
