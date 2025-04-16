@@ -517,49 +517,69 @@ elif page == "Email Content Generator":
 
 
 # --- Sentiment Analysis & Creative Response ---
-
 elif page == "Text Analysis & Sentiment Response":
     st.title("📝 Text Analysis and Creative Sentiment Response Generator")
     st.markdown("### Enter your text below:")
 
     user_input = st.text_area("Input Text:", height=150)
 
+    # ✅ Define columns first, always outside button logic
     col1, col2, col3 = st.columns(3)
 
-# Button 1: Analyze Sentiment
-if col1.button("Analyze Sentiment"):
-    if user_input:
-        result = analyze_sentiment_and_emotion(user_input)
-        st.subheader("📊 Sentiment Analysis")
-        st.markdown(f"- **Sentiment:** `{result['sentiment']}`")
-        st.markdown(f"- **Dominant Emotion:** `{result['emotion']}`")
-        st.markdown("#### Emotion Word Matches:")
-        st.json(result["counts"])
-    else:
-        st.warning("Please enter text to analyze.")
+    # ✅ Put each button inside its respective column
+    with col1:
+        analyze_btn = st.button("Analyze Sentiment")
+    with col2:
+        creative_btn = st.button("Generate Creative Response")
+    with col3:
+        debug_btn = st.button("Agent Debug Trace")
 
-# Button 2: Generate Poetic Response
-if col2.button("Generate Creative Response"):
-    if user_input:
-        poetic = generate_poetic_response(user_input)
-        st.subheader("🎨 Poetic Response")
-        st.markdown(poetic)
-    else:
-        st.warning("Please enter text for creative response.")
+    # ✅ Then use the buttons safely after they're created
+    if analyze_btn:
+        if user_input:
+            response = agent({"input": user_input})
+            st.subheader("📊 Analysis Result")
+            st.markdown(f"Action: AnalyzeSentiment")
+            st.markdown(f"Action Input: {user_input}")
+            sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
+            st.markdown(f"Observation: {sentiment_and_emotion}")
+        else:
+            st.warning("Please enter some text for sentiment analysis.")
 
-# Button 3: Full Agent Debug
-if col3.button("Agent Debug"):
-    if user_input:
-        response = agent({"input": user_input})
-        analysis = analyze_sentiment_and_emotion(user_input)
-        st.subheader("🤖 Agent Debug Info")
-        st.markdown(f"**Input Text:** {user_input}")
-        st.markdown(f"**Agent Output:** {response.get('output', 'N/A')}")
-        st.markdown(f"**Sentiment:** {analysis['sentiment']} | **Emotion:** {analysis['emotion']}")
-        st.markdown("**Emotion Counts:**")
-        st.json(analysis["counts"])
-    else:
-        st.warning("Please input text for agent debug trace.")
+    if creative_btn:
+        if user_input:
+            agent_response = agent.run(user_input)
+            poetic_response = generate_poetic_response(user_input)
+            st.subheader("🎨 Creative Response")
+            st.markdown(f"Action: GenerateCreativeResponse")
+            st.markdown(f"Action Input: {user_input}")
+            st.markdown(f"Agent Raw Response: {agent_response}")
+            st.subheader("✨ Poetic Output")
+            st.markdown(poetic_response)
+        else:
+            st.warning("Please enter some text for creative response generation.")
+
+    if debug_btn:
+        if user_input:
+            response = agent({"input": user_input})
+            sentiment = analyze_sentiment_and_emotion(user_input)
+            agent_output = response.get("output", "No direct output from agent")
+            st.subheader("🤖 Agent Debug Trace")
+            with st.expander("🧠 Thought Process"):
+                st.markdown("Thought: Do I need to use a tool? Yes")
+                st.markdown("Action: AnalyzeSentiment")
+                st.markdown(f"Action Input: {user_input}")
+                st.markdown(f"Observation: {sentiment}")
+                st.markdown("Thought: Do I need to use a tool? No")
+                st.markdown("AI Final Response:")
+                st.info(agent_output)
+
+            sentiment_color = "🟢 Positive" if "positive" in sentiment["sentiment"].lower() else "🔴 Negative" if "negative" in sentiment["sentiment"].lower() else "🟡 Neutral"
+            st.markdown("### 🏷 Sentiment Result")
+            st.success(f"Sentiment Analysis: *{sentiment_color}* — {sentiment['sentiment']}")
+        else:
+            st.warning("Please enter text for debugging.")
+
 
 
 # --- Text to Speech ---#
