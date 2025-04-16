@@ -1,11 +1,11 @@
 import streamlit as st
 import os
 import json
-from io import BytesIO  # Missing import for BytesIO
-import requests
-from gtts import gTTS
-from textblob import TextBlob
-from langdetect import detect
+#from io import BytesIO  # Missing import for BytesIO
+#import requests
+#from gtts import gTTS
+#from textblob import TextBlob
+#from langdetect import detect
 from dotenv import load_dotenv
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
@@ -60,28 +60,7 @@ def generate_text_content(ingredients: str) -> str:
         return "Error generating content."
 
 # Supported languages by gTTS
-SUPPORTED_LANGUAGES = {
-    "af", "ar", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr",
-    "hu", "id", "is", "it", "ja", "jw", "kn", "ko", "la", "lv", "mk", "ml", "mr", "my", "ne", "nl", "no", "pl", "pt",
-    "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW", "zh"
-}
 
-def text_to_speech(text: str) -> BytesIO:
-    try:
-        detected_language = detect(text)
-        if detected_language not in SUPPORTED_LANGUAGES:
-            st.warning(f"⚠️ Detected language '{detected_language}' is not supported. Using English instead.")
-            detected_language = "en"
-
-        tts = gTTS(text=text, lang=detected_language)
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        return audio_buffer
-
-    except Exception as e:
-        st.error(f"Text-to-Speech Error: {e}")
-        return None
 
 # --- Load & Save Chat History ---
 def load_chat_history():
@@ -124,9 +103,7 @@ if "chat_history" not in st.session_state:
 
 # --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
-    "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator", "Text Analysis & Sentiment Response", 
-    "Text to Speech", "Data Visualization", "Chat History"
+    "Home", "Chat Bot", "Chat History"
 ])
 
 # --- Chat Bot Page ---
@@ -149,25 +126,6 @@ if page == "Chat Bot":
             except Exception as e:
                 st.error(f"Gemini API Error: {e}")
 
-# --- Marketing Content Generator Page ---
-elif page == "Marketing Content Generator":
-    st.title("🎯 Marketing Content Generator")
-    ingredients = st.text_area("Enter marketing ingredients or prompts:")
-
-    if ingredients:
-        st.write("**Ingredients:**", ingredients)
-        response = generate_text_content(ingredients)
-        st.write("**AI Response:**", response)
-
-# --- Text to Speech Page ---
-elif page == "Text to Speech":
-    st.title("🗣️ Text to Speech")
-    text_input = st.text_area("Enter text for TTS:")
-    
-    if text_input:
-        audio_buffer = text_to_speech(text_input)
-        if audio_buffer:
-            st.audio(audio_buffer, format="audio/mp3")
 
 # --- Home Page ---
 elif page == "Home":
