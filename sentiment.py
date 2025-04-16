@@ -271,9 +271,4 @@ def fast_generate_poetic_response(text: str) -> str:
     sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     return f"In a {sentiment.lower()} tone, here’s a poetic take:\n\n“{text}” 🌟"
 
-# --- LLM-Based Poetic Generator ---
-def generate_poetic_response(text: str) -> str:
-    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
-    prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
-    return model.invoke([HumanMessage(content=prompt)]).content  # model must be defined globally
 
