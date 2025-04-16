@@ -18,11 +18,10 @@ AI WORKCOHOL PROJECT
 │   .env                # Environment variables
 │   .gitattributes      # Git configuration
 │   .gitignore          # Git ignore rules
-│   main.py             # Main application script
+│   app.py             # Main application script
 │   README.md           # Project documentation
 │   app.log             # Application log
 |
-│   file_structure.txt  # File structure reference
 │
 ├── .streamlit          # Streamlit configuration
 │   ├── secrets.toml    # Secret keys and credentials
