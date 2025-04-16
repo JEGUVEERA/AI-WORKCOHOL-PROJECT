@@ -1,8 +1,8 @@
 # Streamlit and Web App Essentials
 streamlit==1.44.0
 python-dotenv==1.0.1
-requests==2.32.3
-aiohttp==3.11.14
+
+
 
 # Data Handling
 numpy==2.1.3
