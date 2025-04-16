@@ -221,8 +221,7 @@ emotion = {
     "negative": negative_words,
 }
 
-
-    def analyze_sentiment_and_emotion(text: str) -> dict:
+def analyze_sentiment_and_emotion(text: str) -> dict:
     text_lower = text.lower()
     words = set(re.findall(r'\b\w+\b', text_lower))
     emotion_counts = defaultdict(int)
@@ -259,7 +258,7 @@ def generate_poetic_response(text: str) -> str:
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
 
-# LangChain Agent Setup
+# LangChain Agent
 tools = [
     Tool(name="SentimentEmotionTool", func=analyze_sentiment_and_emotion, description="Analyze sentiment/emotion."),
     Tool(name="PoeticResponseTool", func=generate_poetic_response, description="Generate poetic response.")
