@@ -54,7 +54,7 @@ from chat_utils import load_chat_history, save_chat_history, display_chat_histor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 # Load environment variables
 
 if os.getenv("ENV") != "production":
@@ -149,7 +149,7 @@ def text_to_speech(text: str) -> BytesIO:
     try:
         detected_language = detect(text)
         if detected_language not in SUPPORTED_LANGUAGES:
-            st.warning(f"⚠️ Detected language '{detected_language}' is not supported. Using English instead.")
+            st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
             detected_language = "en"
 
         tts = gTTS(text=text, lang=detected_language)
@@ -314,7 +314,7 @@ if page == "Chat Bot":
     user_input = st.text_input("Type your message here:")
 
     if user_input:
-        st.write("**User:**", user_input)
+        st.write("*User:*", user_input)
         with st.spinner("Ollama API thinking..."):
             try:
                 ollama_response = asyncio.run(query_ollama_async(user_input))
@@ -414,7 +414,7 @@ elif page == "Social Media Post Generator":
             st.subheader("📝 AI-Generated Post")
             st.markdown(post)
 
-            st.subheader("🏷️ Suggested Hashtags")
+            st.subheader("🏷 Suggested Hashtags")
             st.markdown(hashtags)
 
    
@@ -583,11 +583,11 @@ elif page == "Text Analysis & Sentiment Response":
 
             # Display the response in structured format
             st.subheader("📊 Analysis Result")
-            st.markdown(f"*Action:* AnalyzeSentiment")
-            st.markdown(f"*Action Input:* {user_input}")
+            st.markdown(f"Action: AnalyzeSentiment")
+            st.markdown(f"Action Input: {user_input}")
 
             sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
-            st.markdown(f"*Observation:* {sentiment_and_emotion}")
+            st.markdown(f"Observation: {sentiment_and_emotion}")
         else:
             st.warning("Please enter some text for sentiment analysis.")
 
@@ -599,11 +599,11 @@ elif page == "Text Analysis & Sentiment Response":
             creative_response = generate_creative_response(user_input)
             # Display the response in structured format
             st.subheader("🎨 Creative Response")
-            st.markdown(f"*Action:* GenerateCreativeResponse")
-            st.markdown(f"*Action Input:* {user_input}")
-            st.markdown(f"*Generated Response:* {agent_response}")
+            st.markdown(f"Action: GenerateCreativeResponse")
+            st.markdown(f"Action Input: {user_input}")
+            st.markdown(f"Generated Response: {agent_response}")
             st.subheader("✨ Creative Response")
-            st.markdown(f"*Generated Creative Response:* {creative_response}")
+            st.markdown(f"Generated Creative Response: {creative_response}")
         else:
             st.warning("Please enter some text for creative response generation.")
 
@@ -621,18 +621,18 @@ elif page == "Text Analysis & Sentiment Response":
         st.subheader("🤖 Agent Debug Trace")
 
         with st.expander("🧠 Thought Process"):
-            st.markdown("*Thought:* Do I need to use a tool? Yes")
-            st.markdown("*Action:* AnalyzeSentiment")
-            st.markdown(f"*Action Input:* `{user_input}`")
-            st.markdown(f"*Observation:* `{sentiment}`")
-            st.markdown("*Thought:* Do I need to use a tool? No")
-            st.markdown("*AI Final Response:*")
+            st.markdown("Thought: Do I need to use a tool? Yes")
+            st.markdown("Action: AnalyzeSentiment")
+            st.markdown(f"Action Input: {user_input}")
+            st.markdown(f"Observation: {sentiment}")
+            st.markdown("Thought: Do I need to use a tool? No")
+            st.markdown("AI Final Response:")
             st.info(agent_output)
 
         # Sentiment Badge
-        st.markdown("### 🏷️ Sentiment Result")
+        st.markdown("### 🏷 Sentiment Result")
         sentiment_color = "🟢 Positive" if "positive" in sentiment.lower() else "🔴 Negative" if "negative" in sentiment.lower() else "🟡 Neutral"
-        st.success(f"Sentiment Analysis: **{sentiment_color}** — _{sentiment}_")
+        st.success(f"Sentiment Analysis: *{sentiment_color}* — {sentiment}")
 
 
 
@@ -728,7 +728,7 @@ elif page == "Data Visualization":
 
         numeric_cols = data.select_dtypes(include='number').columns.tolist()
         if numeric_cols:
-            st.subheader("⚙️ Chart Configuration")
+            st.subheader("⚙ Chart Configuration")
             chart_type = st.selectbox("📈 Select chart type:", ["Line Chart", "Bar Chart", "Area Chart", "Custom Plot"])
             selected_cols = st.multiselect("📌 Select numeric columns to visualize:", numeric_cols, default=numeric_cols[:2])
 
@@ -745,9 +745,9 @@ elif page == "Data Visualization":
                 elif chart_type == "Custom Plot":
                     plot_custom(data, selected_cols)
             else:
-                st.warning("⚠️ Please select at least one column.")
+                st.warning("⚠ Please select at least one column.")
         else:
-            st.warning("⚠️ No numeric columns detected in your dataset.")
+            st.warning("⚠ No numeric columns detected in your dataset.")
 
     # Upload or use sample
     use_sample = st.checkbox("✅ Use sample dataset instead of uploading")
@@ -764,9 +764,9 @@ elif page == "Data Visualization":
                 if data is not None and not data.empty:
                     st.success("✅ File loaded successfully!")
                 else:
-                    st.warning("⚠️ Uploaded file is empty.")
+                    st.warning("⚠ Uploaded file is empty.")
             except Exception as e:
-                st.error(f"⚠️ Error reading file: {e}")
+                st.error(f"⚠ Error reading file: {e}")
                 data = None
 
     if data is not None and not data.empty:
@@ -780,5 +780,5 @@ elif page == "Data Visualization":
 
 
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     st.write("")
