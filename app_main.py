@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import os
 import json
-import requests
 import asyncio
-import aiohttp
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
@@ -20,16 +18,9 @@ import time
 from dotenv import load_dotenv
 from langdetect import detect
 
-
-
-
-
 # LangChain & AI Imports
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from langchain.chains import LLMChain
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
 import google.generativeai as genai
@@ -39,11 +30,8 @@ from langdetect import detect
 from langchain_openai import OpenAI
 
 
-
-
-
 # Custom Modules
-from sentiment import analyze_sentiment_and_emotion, generate_poetic_response
+from sentiment import agent, fast_generate_poetic_response, analyze_sentiment_and_emotion, generate_poetic_response
 
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
@@ -522,33 +510,39 @@ elif page == "Text Analysis & Sentiment Response":
     st.markdown("### Enter your text below:")
 
     user_input = st.text_area("Input Text:", height=150)
-
-
+    fast_mode = st.checkbox("⚡ Fast Mode (no LLM calls)", value=True)
 
     col1, col2 = st.columns(2)
+    analyze_btn = col1.button("Analyze Sentiment")
+    creative_btn = col2.button("Generate Creative Response")
 
-# Button 1: Analyze Sentiment
-if col1.button("Analyze Sentiment"):
     if user_input:
-        result = analyze_sentiment_and_emotion(user_input)
-        st.subheader("📊 Sentiment Analysis")
-        st.markdown(f"- **Sentiment:** `{result['sentiment']}`")
-        st.markdown(f"- **Dominant Emotion:** `{result['emotion']}`")
-        st.markdown("#### Emotion Word Matches:")
-        st.json(result["counts"])
+        if analyze_btn:
+            sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
+            st.subheader("📊 Analysis Result")
+            st.markdown(f"**Action:** `AnalyzeSentiment`")
+            st.markdown(f"**Input:** {user_input}")
+            st.markdown(f"**Observation:** `{sentiment_and_emotion}`")
+
+        if creative_btn:
+            st.subheader("🎨 Creative Response")
+            st.markdown(f"**Action:** `GenerateCreativeResponse`")
+            st.markdown(f"**Input:** {user_input}")
+
+            if fast_mode:
+                poetic_response = fast_generate_poetic_response(user_input)
+                st.markdown(f"**✨ Poetic Output:**\n\n{poetic_response}")
+            else:
+                with st.spinner("⏳ Generating response..."):
+                    agent_response = agent.run(user_input)
+                    poetic_response = generate_poetic_response(user_input)
+                    st.markdown(f"**Agent Raw Response:**\n{agent_response}")
+                    st.subheader("✨ Poetic Output")
+                    st.markdown(poetic_response)
     else:
-        st.warning("Please enter text to analyze.")
+        st.info("Please enter some text above to begin.")
 
-# Button 2: Generate Poetic Response
-if col2.button("Generate Creative Response"):
-    if user_input:
-        poetic = generate_poetic_response(user_input)
-        st.subheader("🎨 Poetic Response")
-        st.markdown(poetic)
-    else:
-        st.warning("Please enter text for creative response.")
-
-
+    st.markdown("---")
 
 
 

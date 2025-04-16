@@ -1,4 +1,4 @@
-
+import streamlit as st
 import re
 from collections import defaultdict
 from dotenv import load_dotenv
@@ -7,10 +7,22 @@ from langchain.schema import HumanMessage
 from langchain.agents import initialize_agent, Tool
 from langchain.agents.agent_types import AgentType
 
+
 load_dotenv()
 
-# Initialize Gemini LLM
+
 model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+
+
+tools = []
+
+# Initialize the agent
+agent = initialize_agent(
+    tools=tools,
+    llm=model,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True
+)
 
 positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
@@ -221,6 +233,7 @@ emotion = {
     "negative": negative_words,
 }
 
+# --- Sentiment and Emotion Analysis ---
 def analyze_sentiment_and_emotion(text: str) -> dict:
     text_lower = text.lower()
     words = set(re.findall(r'\b\w+\b', text_lower))
@@ -253,7 +266,14 @@ def analyze_sentiment_and_emotion(text: str) -> dict:
         "counts": dict(emotion_counts)
     }
 
+# --- Fast Poetic Generator ---
+def fast_generate_poetic_response(text: str) -> str:
+    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
+    return f"In a {sentiment.lower()} tone, here’s a poetic take:\n\n“{text}” 🌟"
+
+# --- LLM-Based Poetic Generator ---
 def generate_poetic_response(text: str) -> str:
     sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
-    return model.invoke([HumanMessage(content=prompt)]).content
+    return model.invoke([HumanMessage(content=prompt)]).content  # model must be defined globally
+
