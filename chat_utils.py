@@ -9,7 +9,7 @@ def load_chat_history():
     except FileNotFoundError:
         return []
 
-# --- Save chat history to file ---
+## --- Save chat history to file ---
 def save_chat_history(chat_history):
     with open("chat_history.json", "w") as f:
         json.dump(chat_history, f, indent=4)
