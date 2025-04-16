@@ -525,7 +525,6 @@ elif page == "Text Analysis & Sentiment Response":
 
     col1, col2, col3 = st.columns(3)
 
-
 # Button 1: Analyze Sentiment
 if col1.button("Analyze Sentiment"):
     if user_input:
@@ -560,6 +559,7 @@ if col3.button("Agent Debug"):
         st.json(analysis["counts"])
     else:
         st.warning("Please input text for agent debug trace.")
+
 
 
 
