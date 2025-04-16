@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import os
 import json
-import requests
 import asyncio
-import aiohttp
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
