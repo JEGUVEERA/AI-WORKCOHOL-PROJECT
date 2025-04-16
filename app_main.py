@@ -31,8 +31,7 @@ from langchain_openai import OpenAI
 
 
 # Custom Modules
-from sentiment import agent, fast_generate_poetic_response, analyze_sentiment_and_emotion, generate_poetic_response
-
+from sentiment import agent, fast_generate_poetic_response, analyze_sentiment_and_emotion
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
 
