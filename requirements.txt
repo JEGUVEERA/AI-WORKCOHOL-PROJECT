@@ -6,7 +6,7 @@ python-dotenv
 requests
 Pillow
 textblob
-langchain
 google-generativeai
 openai
+langchain==0.0.131
 
