@@ -119,4 +119,3 @@ langchain-ollama==0.3.1
 # Optional (you had these in earlier versions or adjacent tools)
 deep-translator==1.11.4
 googletrans==4.0.2
->>>>>>> 279f4e39ea624f1c75d5875d199c3710add4c016
