@@ -625,10 +625,6 @@ elif page == "Data Visualization":
     st.title("📊 AI Data Visualizer")
     st.markdown("Upload your file (CSV, TXT, Excel) or use a sample dataset to visualize numeric data.")
 
-    import os
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
 
     def load_file(file):
         ext = os.path.splitext(file.name)[-1]
