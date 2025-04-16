@@ -46,7 +46,7 @@ from langchain_ollama import OllamaLLM
 # Custom Modules
 from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
 
-from chat_utils import load_chat_history, save_chat_history, display_chat_history
+
 
 
 
@@ -54,7 +54,8 @@ from chat_utils import load_chat_history, save_chat_history, display_chat_histor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
+
 # Load environment variables
 
 if os.getenv("ENV") != "production":
@@ -780,5 +781,5 @@ elif page == "Data Visualization":
 
 
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     st.write("")
