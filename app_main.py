@@ -730,7 +730,3 @@ elif page == "Data Visualization":
 
 
 
-
-
-if __name__ == "_main_":
-    st.write("")
