@@ -43,7 +43,7 @@ from langchain_openai import OpenAI
 
 
 # Custom Modules
-from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
+from sentiment import agent, analyze_sentiment_and_emotion, generate_poetic_response
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
 
@@ -548,7 +548,7 @@ elif page == "Text Analysis & Sentiment Response":
     if col2.button("Generate Creative Response"):
         if user_input:
             agent_response = agent.run(user_input)
-            creative_response = generate_creative_response(user_input)
+            creative_response = generate_poetic_response(user_input)
             # Display the response in structured format
             st.subheader("🎨 Creative Response")
             st.markdown(f"Action: GenerateCreativeResponse")

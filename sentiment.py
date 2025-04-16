@@ -3,6 +3,8 @@ from collections import defaultdict
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage
+from langchain.agents import initialize_agent, Tool
+from langchain.agents.agent_types import AgentType
 
 load_dotenv()
 
@@ -259,3 +261,23 @@ def analyze_sentiment_and_emotion(text: str) -> dict:
 def generate_poetic_response(text: str, sentiment: str) -> str:
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
+
+tools = [
+    Tool(
+        name="SentimentEmotionTool",
+        func=analyze_sentiment_and_emotion,
+        description="Analyzes sentiment and emotion in a given text"
+    ),
+    Tool(
+        name="PoeticResponseTool",
+        func=generate_poetic_response,
+        description="Generates poetic response based on sentiment"
+    )
+]
+
+agent = initialize_agent(
+    tools=tools,
+    llm=model,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True
+)
