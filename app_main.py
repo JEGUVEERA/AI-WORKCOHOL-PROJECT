@@ -43,7 +43,7 @@ from langchain_openai import OpenAI
 
 
 # Custom Modules
-from sentiment import agent, analyze_sentiment_and_emotion, generate_poetic_response
+from sentiment import analyze_sentiment_and_emotion, generate_poetic_response
 
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
@@ -523,65 +523,32 @@ elif page == "Text Analysis & Sentiment Response":
 
     user_input = st.text_area("Input Text:", height=150)
 
-    if not user_input:
-        st.info("Please enter some text above to begin.")
+
+
+    col1, col2 = st.columns(2)
+
+# Button 1: Analyze Sentiment
+if col1.button("Analyze Sentiment"):
+    if user_input:
+        result = analyze_sentiment_and_emotion(user_input)
+        st.subheader("📊 Sentiment Analysis")
+        st.markdown(f"- **Sentiment:** `{result['sentiment']}`")
+        st.markdown(f"- **Dominant Emotion:** `{result['emotion']}`")
+        st.markdown("#### Emotion Word Matches:")
+        st.json(result["counts"])
     else:
-        # Safely define buttons in columns
-        col1, col2, col3 = st.columns(3)
-        analyze_btn = col1.button("Analyze Sentiment")
-        creative_btn = col2.button("Generate Creative Response")
-        debug_btn = col3.button("Agent Debug Trace")
+        st.warning("Please enter text to analyze.")
 
-        # Sentiment Analysis
-        if analyze_btn:
-            with st.spinner("Analyzing sentiment..."):
-                response = agent({"input": user_input})
-                sentiment_result = analyze_sentiment_and_emotion(user_input)
+# Button 2: Generate Poetic Response
+if col2.button("Generate Creative Response"):
+    if user_input:
+        poetic = generate_poetic_response(user_input)
+        st.subheader("🎨 Poetic Response")
+        st.markdown(poetic)
+    else:
+        st.warning("Please enter text for creative response.")
 
-                st.subheader("📊 Analysis Result")
-                st.markdown("**Action:** AnalyzeSentiment")
-                st.markdown(f"**Input:** {user_input}")
-                st.markdown(f"**Observation:** `{sentiment_result}`")
 
-        # Creative Poetic Response
-        if creative_btn:
-            with st.spinner("Generating creative poetic response..."):
-                agent_response = agent.run(user_input)
-                poetic_response = generate_poetic_response(user_input)
-
-                st.subheader("🎨 Creative Response")
-                st.markdown("**Action:** GenerateCreativeResponse")
-                st.markdown(f"**Input:** {user_input}")
-                st.markdown("**Agent Raw Response:**")
-                st.info(agent_response)
-
-                st.subheader("✨ Poetic Output")
-                st.markdown(poetic_response)
-
-        # Debug Trace
-        if debug_btn:
-            with st.spinner("Tracing agent steps..."):
-                response = agent({"input": user_input})
-                sentiment = analyze_sentiment_and_emotion(user_input)
-                agent_output = response.get("output", "No direct output from agent")
-
-                st.subheader("🤖 Agent Debug Trace")
-                with st.expander("🧠 Thought Process"):
-                    st.markdown("Thought: Do I need to use a tool? Yes")
-                    st.markdown("Action: AnalyzeSentiment")
-                    st.markdown(f"Action Input: `{user_input}`")
-                    st.markdown(f"Observation: `{sentiment}`")
-                    st.markdown("Thought: Do I need to use a tool? No")
-                    st.markdown("AI Final Response:")
-                    st.success(agent_output)
-
-                sentiment_color = (
-                    "🟢 Positive" if "positive" in sentiment["sentiment"].lower()
-                    else "🔴 Negative" if "negative" in sentiment["sentiment"].lower()
-                    else "🟡 Neutral"
-                )
-                st.markdown("### 🏷 Sentiment Result")
-                st.success(f"Sentiment: *{sentiment_color}* — {sentiment['sentiment']}")
 
 
 

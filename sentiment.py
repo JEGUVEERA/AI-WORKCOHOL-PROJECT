@@ -257,16 +257,3 @@ def generate_poetic_response(text: str) -> str:
     sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
-
-# LangChain Agent
-tools = [
-    Tool(name="SentimentEmotionTool", func=analyze_sentiment_and_emotion, description="Analyze sentiment/emotion."),
-    Tool(name="PoeticResponseTool", func=generate_poetic_response, description="Generate poetic response.")
-]
-
-agent = initialize_agent(
-    tools=tools,
-    llm=model,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=False
-)
