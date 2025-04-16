@@ -95,7 +95,7 @@ ollama install llama3.2:1b
 
 ## To pull an existing model to use
 ```bash
-ollama pull <model_name>
+ollama pull llama3.2:1b
 ```
 
 
