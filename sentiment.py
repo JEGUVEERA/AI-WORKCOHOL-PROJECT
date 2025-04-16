@@ -234,34 +234,24 @@ def analyze_sentiment_and_emotion(text: str) -> dict:
             elif word in words:
                 emotion_counts[emo_label] += 1
 
-    # Sentiment Scoring
     pos, neg = emotion_counts.get("positive", 0), emotion_counts.get("negative", 0)
-    if pos > neg:
-        sentiment = "Positive"
-    elif neg > pos:
-        sentiment = "Negative"
-    elif pos == neg and pos > 0:
-        sentiment = "Mixed"
-    else:
-        sentiment = "Neutral"
+    sentiment = "Positive" if pos > neg else "Negative" if neg > pos else "Mixed" if pos == neg and pos > 0 else "Neutral"
 
-    # Final cleanup
     emotion_counts.pop("positive", None)
     emotion_counts.pop("negative", None)
 
-    # Most likely emotion
     emotion_label = max(emotion_counts.items(), key=lambda x: x[1], default=("Neutral", 0))[0]
-    
+
     return {
         "sentiment": sentiment,
         "emotion": emotion_label,
         "counts": dict(emotion_counts)
     }
+
 def generate_poetic_response(text: str) -> str:
     sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
     return model.invoke([HumanMessage(content=prompt)]).content
-
 
 tools = [
     Tool(
