@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import random
 import os
 import json
+import requests
 import asyncio
+import aiohttp
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
@@ -26,6 +28,7 @@ from langdetect import detect
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_community.llms import Ollama
 from langchain.chains import LLMChain
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.llms import OpenAI
@@ -35,7 +38,7 @@ import google.generativeai as genai
 from langchain.chains import LLMChain
 from langdetect import detect
 from langchain_openai import OpenAI
-
+from langchain_ollama import OllamaLLM
 
 
 
@@ -43,7 +46,7 @@ from langchain_openai import OpenAI
 # Custom Modules
 from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
 
-from chat_utils import load_chat_history, save_chat_history, display_chat_history
+
 
 
 
@@ -51,7 +54,7 @@ from chat_utils import load_chat_history, save_chat_history, display_chat_histor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 # Load environment variables
 
@@ -225,10 +228,60 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 
 
 
+# --- AI Model (LangChain) ---
+llm = OllamaLLM(model="llama3.2:1b")
+output_parser = StrOutputParser()
+
+prompt = ChatPromptTemplate.from_messages([
+    SystemMessage(content=(
+        "You are Jeguveera's AI assistant. "
+        "Your job is to generate professional, human-like, real-world content. "
+        "Generate high-quality, real-world marketing content. "
+        "Only provide responses that sound human-made, persuasive, and relevant to the user's request. "
+        "Commentary and details should be included. "
+        "Generate complex and detailed content."
+    )),
+    HumanMessage(content="User query: {query}")
+])
+
+chain = prompt | llm | output_parser
+
+# --- Ollama API Query ---
+
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+headers = {"Content-Type": "application/json"}
+data = {"model": "llama3.2:1b", "prompt": "Hello, how are you?", "stream": False}
+response = requests.post(OLLAMA_URL, json=data, headers=headers)
+print("Ollama API returned:", response.json())
+
+async def query_ollama_async(query):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                OLLAMA_URL,
+                json={
+                    "model": "llama3.2:1b",
+                    "prompt": query,
+                    "stream": False
+                },
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status != 200:
+                    return f"Error: Status code {response.status} from Ollama API."
+
+                response_json = await response.json()
+                return response_json.get("response", "No response field in Ollama output.")
+    except asyncio.TimeoutError:
+        return "Error: Request timed out."
+    except Exception as e:
+        return f"Error: Ollama API connection failed. {str(e)}"
 
 
 
-### --- Feature Selection ---
+
+
+
+# --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
     "Email Content Generator", "Text Analysis & Sentiment Response", 
@@ -256,27 +309,25 @@ if "chat_history" not in st.session_state:
 if "last_ollama_response" not in st.session_state:
     st.session_state.last_ollama_response = ""
 
-# --- Chat Bot Page ---
+# --- CHATBOT PAGE ---
 if page == "Chat Bot":
     st.title("🤖 Jeguveera's AI Chat Bot")
     user_input = st.text_input("Type your message here:")
 
     if user_input:
-        st.write("**User:**", user_input)
-        with st.spinner("Gemini API thinking..."):
+        st.write("User:", user_input)
+        with st.spinner("Ollama API thinking..."):
             try:
-                # Use Gemini model to generate a response
-                prompt = f"You are a helpful AI assistant. Respond to the following input: {user_input}"
-                response = model.generate_content(prompt).text
-                st.success("AI Response:")
-                st.markdown(response)
+                ollama_response = asyncio.run(query_ollama_async(user_input))
+                st.success("Ollama API 🤖:")
+                st.markdown(ollama_response)
                 
-                # Save to chat history
-                create_chat_history_entry("Chat Bot", user_input, response)
+                # Save to history
+                st.session_state.last_ollama_response = ollama_response
+                create_chat_history_entry("Ollama", user_input, ollama_response)
+
             except Exception as e:
-                st.error(f"Gemini API Error: {e}")
-
-
+                st.error(f"Ollama API Error: {e}")
 
 # --- CHAT HISTORY PAGE ---
 elif page == "Chat History":
@@ -582,7 +633,7 @@ elif page == "Text Analysis & Sentiment Response":
         # Sentiment Badge
         st.markdown("### 🏷 Sentiment Result")
         sentiment_color = "🟢 Positive" if "positive" in sentiment.lower() else "🔴 Negative" if "negative" in sentiment.lower() else "🟡 Neutral"
-        st.success(f"Sentiment Analysis: *{sentiment_color}* — {sentiment}")
+        st.success(f"Sentiment Analysis: {sentiment_color} — {sentiment}")
 
 
 
@@ -730,5 +781,5 @@ elif page == "Data Visualization":
 
 
 
-if __name__ == "_main_":
-    st.write("")
+if _name_ == "main":
+    st.write("")
