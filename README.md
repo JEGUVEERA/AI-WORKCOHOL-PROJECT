@@ -1,4 +1,4 @@
-﻿﻿# AI-WORKCOHOL-PROJECT
+# AI-WORKCOHOL-PROJECT
 
 ### 🎥 Demo
 
@@ -126,6 +126,15 @@ ollama pull <model_name>
    ```
 
 4. `ollama` will start the server, and you can access your model via the provided endpoint!
+
+
+## To run the Streamlit local application
+
+To run the Streamlit application, use the following command:
+
+```bash
+streamlit run app.py
+```
 
 
 
