@@ -1,26 +1,16 @@
-import re
 import os
-from dotenv import load_dotenv
-from langchain.agents import Tool, initialize_agent, AgentType
-from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
+import re
 from collections import defaultdict
-
-
-
-
-
+from dotenv import load_dotenv
+from langchain.agents import Tool, initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-
-model = ChatGoogleGenerativeAI(
-    model="models/gemini-1.5-flash",  # or "gemini-pro"
-    google_api_key=GEMINI_API_KEY
-)
+# Initialize Gemini LLM
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
 
 
@@ -234,71 +224,97 @@ emotion = {
     "negative": negative_words,
 }
 
-# --- Sentiment & Emotion Analysis ---
-def analyze_sentiment_and_emotion(text: str) -> dict:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Sentiment and emotion analyzer
+def analyze_sentiment_and_emotion(text: str) -> str:
     text_lower = text.lower()
-    words = set(re.findall(r'\b\w+\b', text_lower))
+    words = re.findall(r'\b\w+\b', text_lower)
     emotion_counts = defaultdict(int)
 
     for emo_label, word_list in emotion.items():
         for word in word_list:
-            if ' ' in word and word in text_lower:
-                emotion_counts[emo_label] += 1
-            elif word in words:
-                emotion_counts[emo_label] += 1
+            if ' ' in word:
+                if word in text_lower:
+                    emotion_counts[emo_label] += 1
+            else:
+                emotion_counts[emo_label] += words.count(word)
 
-    pos = emotion_counts.pop("positive", 0)
-    neg = emotion_counts.pop("negative", 0)
+    # Sentiment scoring
+    positive_count = emotion_counts.get("positive", 0)
+    negative_count = emotion_counts.get("negative", 0)
 
-    if pos > neg:
+    if positive_count > negative_count:
         sentiment = "Positive"
-    elif neg > pos:
+    elif negative_count > positive_count:
         sentiment = "Negative"
-    elif pos == neg and pos > 0:
+    elif positive_count == negative_count and positive_count > 0:
         sentiment = "Mixed"
     else:
         sentiment = "Neutral"
 
-    emotion_label = max(emotion_counts.items(), key=lambda x: x[1], default=("Neutral", 0))[0]
+    # Remove sentiment from emotion display
+    emotion_counts.pop("positive", None)
+    emotion_counts.pop("negative", None)
 
-    return {
-        "sentiment": sentiment,
-        "emotion": emotion_label,
-        "counts": dict(emotion_counts)
-    }
+    # Find dominant emotions
+    dominant_emotions = sorted(emotion_counts.items(), key=lambda x: x[1], reverse=True)
+    top_emotions = [e for e, count in dominant_emotions if count > 0]
+    emotion_result = ", ".join(top_emotions) if top_emotions else "No strong emotion detected"
 
-# --- Fast Poetic Generator ---
-def fast_generate_poetic_response(text: str) -> str:
-    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
-    return f"In a {sentiment.lower()} tone, here’s a poetic take:\n\n“{text}” 🌟"
+    return f"Sentiment: {sentiment}\nDominant Emotions: {emotion_result}\nCounts: {dict(emotion_counts)}"
 
-# --- Gemini Sentiment Tool ---
-def gemini_sentiment_tool(input_text: str) -> str:
-    prompt = f"Analyze the sentiment and emotion of the following text:\n\n\"{input_text}\"\n\n" \
-             f"Return a short and clear result like:\n" \
-             f"Sentiment: Positive/Negative/Neutral\nEmotion: Joy/Anger/Sadness/etc."
-    response = model.invoke(prompt)  
-    print(f"Response from model: {response}")  
-    return response.content if hasattr(response, "content") else str(response)
+# Creative response function
+def generate_creative_response(text: str) -> str:
+    return f"✨ Creative Response: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
-# --- Initialize Tools ---
+# Define LangChain tools
 tools = [
-    Tool.from_function(
-        func=gemini_sentiment_tool,
-        name="GeminiSentimentTool",
-        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
-    )
+    Tool(
+        name="AnalyzeSentimentAndEmotion",
+        func=analyze_sentiment_and_emotion,
+        description="Analyze sentiment and detect emotions (e.g., anger, sarcasm, confidence, frustration)"
+    ),
+    Tool(
+        name="GenerateCreativeResponse",
+        func=generate_creative_response,
+        description="Generate a creative and engaging response based on the input text"
+    ),
 ]
 
-print("Initializing agent with tools:", tools)
+# LangChain memory & prompt
+memory = ConversationBufferMemory(memory_key="chat_history")
+prompt_template = PromptTemplate(
+    input_variables=["input", "chat_history"],
+    template="""You are an advanced text analysis and creative response agent. You have access to the following tools:
+- AnalyzeSentimentAndEmotion: Analyzes sentiment of the text and detects nuanced emotional tones.
+- GenerateCreativeResponse: Generates a creative and engaging response based on the input text.
+Chat History: {chat_history}
+User Input: {input}
+"""
+)
 
-try:
-    agent = initialize_agent(
-        tools=tools,
-        llm=model,
-        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=True
-    )
-    print("Agent initialized successfully")
-except Exception as e:
-    print("Agent initialization failed:", e)
+# Initialize LangChain Agent
+agent = initialize_agent(
+    tools=tools,
+    llm=llm,
+    agent="conversational-react-description",
+    memory=memory,
+    verbose=True
+)
