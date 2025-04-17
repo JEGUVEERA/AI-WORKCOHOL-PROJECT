@@ -22,7 +22,7 @@ AI WORKCOHOL PROJECT
 │   .env                # Environment variables
 │   .gitattributes      # Git configuration
 │   .gitignore          # Git ignore rules
-│   main.py             # Main application script
+│   app_main_app.py             # Main application script
 │   README.md           # Project documentation
 │   app.log             # Application log
 |
@@ -99,7 +99,7 @@ ollama install llama3.2:1b
 
 ## To pull an existing model to use
 ```bash
-ollama pull <model_name>
+ollama pull llama3.2:1b
 ```
 
 
@@ -133,7 +133,7 @@ ollama pull <model_name>
 To run the Streamlit application, use the following command:
 
 ```bash
-streamlit run app.py
+streamlit run app.py (but is in txt formate because of local server)
 ```
 
 
@@ -143,7 +143,7 @@ streamlit run app.py
 To run the Streamlit application, use the following command:
 
 ```bash
-streamlit run main.py
+streamlit run app_main_app.py
 ```
 
 
