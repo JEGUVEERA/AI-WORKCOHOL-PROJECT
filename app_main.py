@@ -24,15 +24,13 @@ from langchain.chains import LLMChain
 from langchain_community.llms import OpenAI
 from langchain.prompts import PromptTemplate
 import google.generativeai as genai
-#from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langdetect import detect
 from langchain_openai import OpenAI
 
 
 # Custom Modules
-from sentiment import agent, fast_generate_poetic_response, analyze_sentiment_and_emotion, generate_poetic_response
-
+from sentimental import agent, analyze_sentiment_and_emotion, generate_creative_response
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
 
@@ -530,23 +528,19 @@ elif page == "Text Analysis & Sentiment Response":
             st.markdown(f"**Input:** {user_input}")
 
             if fast_mode:
-                poetic_response = fast_generate_poetic_response(user_input)
+                poetic_response = generate_creative_response(user_input)
                 st.markdown(f"**✨ Poetic Output:**\n\n{poetic_response}")
             else:
                 with st.spinner("⏳ Generating response..."):
-                    agent_response = agent.run(user_input)
-                    poetic_response = generate_poetic_response(user_input)
+                    agent_response = agent.run(user_input)  # agent must be defined globally
                     st.markdown(f"**Agent Raw Response:**\n{agent_response}")
                     st.subheader("✨ Poetic Output")
-                    st.markdown(poetic_response)
+                    st.markdown(agent_response)  # Display the agent's creative response
+
     else:
         st.info("Please enter some text above to begin.")
 
     st.markdown("---")
-
-
-
-
 
 # --- Text to Speech ---#
 

@@ -1,28 +1,19 @@
-import streamlit as st
+import os
 import re
 from collections import defaultdict
 from dotenv import load_dotenv
+from langchain.agents import Tool, initialize_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage
-from langchain.agents import initialize_agent, Tool
-from langchain.agents.agent_types import AgentType
-
 
 load_dotenv()
 
+# Initialize Gemini LLM
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
-model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
 
-tools = []
-
-# Initialize the agent
-agent = initialize_agent(
-    tools=tools,
-    llm=model,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
-)
 
 positive_words = [
     "happy", "joy", "love", "great", "amazing", "wonderful", "brilliant", "cheerful", "delightful", "ecstatic",
@@ -233,47 +224,97 @@ emotion = {
     "negative": negative_words,
 }
 
-# --- Sentiment and Emotion Analysis ---
-def analyze_sentiment_and_emotion(text: str) -> dict:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Sentiment and emotion analyzer
+def analyze_sentiment_and_emotion(text: str) -> str:
     text_lower = text.lower()
-    words = set(re.findall(r'\b\w+\b', text_lower))
+    words = re.findall(r'\b\w+\b', text_lower)
     emotion_counts = defaultdict(int)
 
     for emo_label, word_list in emotion.items():
         for word in word_list:
-            if ' ' in word and word in text_lower:
-                emotion_counts[emo_label] += 1
-            elif word in words:
-                emotion_counts[emo_label] += 1
+            if ' ' in word:
+                if word in text_lower:
+                    emotion_counts[emo_label] += 1
+            else:
+                emotion_counts[emo_label] += words.count(word)
 
-    pos = emotion_counts.pop("positive", 0)
-    neg = emotion_counts.pop("negative", 0)
+    # Sentiment scoring
+    positive_count = emotion_counts.get("positive", 0)
+    negative_count = emotion_counts.get("negative", 0)
 
-    if pos > neg:
+    if positive_count > negative_count:
         sentiment = "Positive"
-    elif neg > pos:
+    elif negative_count > positive_count:
         sentiment = "Negative"
-    elif pos == neg and pos > 0:
+    elif positive_count == negative_count and positive_count > 0:
         sentiment = "Mixed"
     else:
         sentiment = "Neutral"
 
-    emotion_label = max(emotion_counts.items(), key=lambda x: x[1], default=("Neutral", 0))[0]
+    # Remove sentiment from emotion display
+    emotion_counts.pop("positive", None)
+    emotion_counts.pop("negative", None)
 
-    return {
-        "sentiment": sentiment,
-        "emotion": emotion_label,
-        "counts": dict(emotion_counts)
-    }
+    # Find dominant emotions
+    dominant_emotions = sorted(emotion_counts.items(), key=lambda x: x[1], reverse=True)
+    top_emotions = [e for e, count in dominant_emotions if count > 0]
+    emotion_result = ", ".join(top_emotions) if top_emotions else "No strong emotion detected"
 
-# --- Fast Poetic Generator ---
-def fast_generate_poetic_response(text: str) -> str:
-    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
-    return f"In a {sentiment.lower()} tone, here’s a poetic take:\n\n“{text}” 🌟"
+    return f"Sentiment: {sentiment}\nDominant Emotions: {emotion_result}\nCounts: {dict(emotion_counts)}"
 
-# --- LLM-Based Poetic Generator ---
-def generate_poetic_response(text: str) -> str:
-    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
-    prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
-    return model.invoke([HumanMessage(content=prompt)]).content  # model must be defined globally
+# Creative response function
+def generate_creative_response(text: str) -> str:
+    return f"✨ Creative Response: Imagine a world where \"{text}\" becomes the heart of a magical story. What adventures would unfold?"
 
+# Define LangChain tools
+tools = [
+    Tool(
+        name="AnalyzeSentimentAndEmotion",
+        func=analyze_sentiment_and_emotion,
+        description="Analyze sentiment and detect emotions (e.g., anger, sarcasm, confidence, frustration)"
+    ),
+    Tool(
+        name="GenerateCreativeResponse",
+        func=generate_creative_response,
+        description="Generate a creative and engaging response based on the input text"
+    ),
+]
+
+# LangChain memory & prompt
+memory = ConversationBufferMemory(memory_key="chat_history")
+prompt_template = PromptTemplate(
+    input_variables=["input", "chat_history"],
+    template="""You are an advanced text analysis and creative response agent. You have access to the following tools:
+- AnalyzeSentimentAndEmotion: Analyzes sentiment of the text and detects nuanced emotional tones.
+- GenerateCreativeResponse: Generates a creative and engaging response based on the input text.
+Chat History: {chat_history}
+User Input: {input}
+"""
+)
+
+# Initialize LangChain Agent
+agent = initialize_agent(
+    tools=tools,
+    llm=llm,
+    agent="conversational-react-description",
+    memory=memory,
+    verbose=True
+)
