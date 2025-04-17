@@ -561,7 +561,7 @@ if user_input:
                 st.markdown(agent_response)  # Display the agent's creative response
 
     else:
-        st.info("Please enter some text above to begin.")
+        st.info("")
 
 
 
