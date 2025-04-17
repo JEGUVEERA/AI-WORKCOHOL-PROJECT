@@ -305,8 +305,8 @@ def gemini_sentiment_tool(input_text: str) -> str:
     prompt = f"Analyze the sentiment and emotion of the following text:\n\n\"{input_text}\"\n\n" \
              f"Return a short and clear result like:\n" \
              f"Sentiment: Positive/Negative/Neutral\nEmotion: Joy/Anger/Sadness/etc."
-    response = model.invoke(prompt)  # Ensure 'model' is properly defined and functional
-    print(f"Response from model: {response}")  # Debugging step
+    response = model.invoke(prompt)  
+    print(f"Response from model: {response}")  
     return response.content if hasattr(response, "content") else str(response)
 
 # --- Initialize Tools ---
@@ -314,19 +314,21 @@ tools = [
     Tool(
         name="GeminiSentimentTool",
         func=gemini_sentiment_tool,
-        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
+        description="Analyzes sentiment and emotion using Gemini 1.5 Flash.",
+        return_direct=True
     )
 ]
 
-# Debugging step: check tools
+
 print("Initializing agent with tools:", tools)
 
-# --- Initialize Agent ---
-agent = initialize_agent(
-    tools=tools,
-    llm=model,
-    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
-)
-
-print("Agent initialized:", agent)  # Debugging step
+try:
+    agent = initialize_agent(
+        tools=tools,
+        llm=model,
+        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        verbose=True
+    )
+    print("Agent initialized successfully")
+except Exception as e:
+    print("Agent initialization failed:", e)
