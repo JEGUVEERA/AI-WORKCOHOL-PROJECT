@@ -22,35 +22,7 @@ model = ChatGoogleGenerativeAI(
     google_api_key=GEMINI_API_KEY
 )
 
-def gemini_sentiment_tool(input_text: str) -> str:
-    prompt = f"Analyze the sentiment and emotion of the following text:\n\n\"{input_text}\"\n\n" \
-             f"Return a short and clear result like:\n" \
-             f"Sentiment: Positive/Negative/Neutral\nEmotion: Joy/Anger/Sadness/etc."
-    response = model.invoke(prompt)
-    return response.content if hasattr(response, "content") else str(response)
 
-
-tools = [
-    Tool(
-        name="GeminiSentimentTool",
-        func=gemini_sentiment_tool,
-        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
-    )
-]
-
-
-agent = initialize_agent(
-    tools=tools,
-    llm=model,
-    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
-)
-
-
-def generate_poetic_response(text: str) -> str:
-    prompt = f"Convert this into a short poetic expression:\n\n{text}"
-    response = model.invoke(prompt)
-    return response.content if hasattr(response, "content") else str(response)
 
 
 positive_words = [
@@ -311,14 +283,12 @@ def gemini_sentiment_tool(input_text: str) -> str:
 
 # --- Initialize Tools ---
 tools = [
-    Tool(
-        name="GeminiSentimentTool",
+    Tool.from_function(
         func=gemini_sentiment_tool,
-        description="Analyzes sentiment and emotion using Gemini 1.5 Flash.",
-        return_direct=True
+        name="GeminiSentimentTool",
+        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
     )
 ]
-
 
 print("Initializing agent with tools:", tools)
 
