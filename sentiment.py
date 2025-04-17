@@ -1,17 +1,56 @@
-import streamlit as st
 import re
-from collections import defaultdict
-from langchain.schema import HumanMessage
-from langchain.agents import initialize_agent, Tool
-from langchain.agents.agent_types import AgentType
+import os
+from dotenv import load_dotenv
+from langchain.agents import Tool, initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
+from collections import defaultdict
+
+
+
+
+
 
 load_dotenv()
 
 
-model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+
+model = ChatGoogleGenerativeAI(
+    model="models/gemini-1.5-flash",  # or "gemini-pro"
+    google_api_key=GEMINI_API_KEY
+)
+
+def gemini_sentiment_tool(input_text: str) -> str:
+    prompt = f"Analyze the sentiment and emotion of the following text:\n\n\"{input_text}\"\n\n" \
+             f"Return a short and clear result like:\n" \
+             f"Sentiment: Positive/Negative/Neutral\nEmotion: Joy/Anger/Sadness/etc."
+    response = model.invoke(prompt)
+    return response.content if hasattr(response, "content") else str(response)
+
+
+tools = [
+    Tool(
+        name="GeminiSentimentTool",
+        func=gemini_sentiment_tool,
+        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
+    )
+]
+
+
+agent = initialize_agent(
+    tools=tools,
+    llm=model,
+    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True
+)
+
+
+def generate_poetic_response(text: str) -> str:
+    prompt = f"Convert this into a short poetic expression:\n\n{text}"
+    response = model.invoke(prompt)
+    return response.content if hasattr(response, "content") else str(response)
 
 
 positive_words = [
@@ -223,6 +262,7 @@ emotion = {
     "negative": negative_words,
 }
 
+# --- Sentiment & Emotion Analysis ---
 def analyze_sentiment_and_emotion(text: str) -> dict:
     text_lower = text.lower()
     words = set(re.findall(r'\b\w+\b', text_lower))
@@ -260,28 +300,33 @@ def fast_generate_poetic_response(text: str) -> str:
     sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
     return f"In a {sentiment.lower()} tone, here’s a poetic take:\n\n“{text}” 🌟"
 
-# --- LLM-Based Poetic Generator ---
-def generate_poetic_response(text: str) -> str:
-    sentiment = analyze_sentiment_and_emotion(text)["sentiment"]
-    prompt = f"The sentiment is {sentiment}. Create a poetic response to:\n{text}"
-    return model.invoke([HumanMessage(content=prompt)]).content  # Ensure 'model' is defined globally
+# --- Gemini Sentiment Tool ---
+def gemini_sentiment_tool(input_text: str) -> str:
+    prompt = f"Analyze the sentiment and emotion of the following text:\n\n\"{input_text}\"\n\n" \
+             f"Return a short and clear result like:\n" \
+             f"Sentiment: Positive/Negative/Neutral\nEmotion: Joy/Anger/Sadness/etc."
+    response = model.invoke(prompt)  # Ensure 'model' is properly defined and functional
+    print(f"Response from model: {response}")  # Debugging step
+    return response.content if hasattr(response, "content") else str(response)
 
-# --- Define Tools ---
-def sentiment_analysis_tool(input_text):
-    return str(analyze_sentiment_and_emotion(input_text))
-
+# --- Initialize Tools ---
 tools = [
     Tool(
-        name="SentimentAnalyzer",
-        func=sentiment_analysis_tool,
-        description="Analyzes sentiment and emotion in the input text."
+        name="GeminiSentimentTool",
+        func=gemini_sentiment_tool,
+        description="Analyzes sentiment and emotion using Gemini 1.5 Flash."
     )
 ]
 
-#   verbose=True
+# Debugging step: check tools
+print("Initializing agent with tools:", tools)
+
+# --- Initialize Agent ---
 agent = initialize_agent(
-    tools=tools,  # ✅ Use the actual tools list
+    tools=tools,
     llm=model,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True
 )
+
+print("Agent initialized:", agent)  # Debugging step
