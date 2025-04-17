@@ -31,6 +31,7 @@ from langchain_openai import OpenAI
 
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
+from sentimental import agent, analyze_sentiment_and_emotion, generate_creative_response
 
 
 
@@ -218,7 +219,8 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 ### --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator","Text to Speech", "Data Visualization", "Chat History"
+    "Email Content Generator","Text to Speech","Text Analysis and Creative Sentiment Response", 
+    "Data Visualization", "Chat History"
 ])
 
 if page == "Home":
@@ -523,6 +525,43 @@ elif page == "Text to Speech":
 
 
 
+# --- sentimental Page ---
+elif page == "Text Analysis and Creative Sentiment Response":
+    st.title("📝 Text Analysis and Creative Sentiment Response Generator")
+    st.markdown("### Enter your text below:")
+
+    user_input = st.text_area("Input Text:", height=150)
+    fast_mode = st.checkbox("⚡ Fast Mode (no LLM calls)", value=True)
+
+    col1, col2 = st.columns(2)
+    analyze_btn = col1.button("Analyze Sentiment")
+    creative_btn = col2.button("Generate Creative Response")
+
+if user_input:
+    if analyze_btn:
+        sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
+        st.subheader("📊 Analysis Result")
+        st.markdown(f"*Action:* AnalyzeSentiment")
+        st.markdown(f"*Input:* {user_input}")
+        st.markdown(f"*Observation:* {sentiment_and_emotion}")
+
+    if creative_btn:
+        st.subheader("🎨 Creative Response")
+        st.markdown(f"*Action:* GenerateCreativeResponse")
+        st.markdown(f"*Input:* {user_input}")
+
+        if fast_mode:
+            poetic_response = generate_creative_response(user_input)
+            st.markdown(f"✨ Poetic Output:\n\n{poetic_response}")
+        else:
+            with st.spinner("⏳ Generating response..."):
+                agent_response = agent.run(user_input)  # agent must be defined globally
+                st.markdown(f"*Agent Raw Response:*\n{agent_response}")
+                st.subheader("✨ Poetic Output")
+                st.markdown(agent_response)  # Display the agent's creative response
+
+    else:
+        st.info("Please enter some text above to begin.")
 
 
 
