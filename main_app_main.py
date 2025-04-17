@@ -525,6 +525,7 @@ elif page == "Text to Speech":
 
 
 
+
 # --- sentimental Page ---
 elif page == "Text Analysis and Creative Sentiment Response":
     st.title("📝 Text Analysis and Creative Sentiment Response Generator")
@@ -537,31 +538,31 @@ elif page == "Text Analysis and Creative Sentiment Response":
     analyze_btn = col1.button("Analyze Sentiment")
     creative_btn = col2.button("Generate Creative Response")
 
-if user_input:
-    if analyze_btn:
-        sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
-        st.subheader("📊 Analysis Result")
-        st.markdown(f"*Action:* AnalyzeSentiment")
-        st.markdown(f"*Input:* {user_input}")
-        st.markdown(f"*Observation:* {sentiment_and_emotion}")
+    if user_input:  
+        if analyze_btn:
+            sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
+            st.subheader("📊 Analysis Result")
+            st.markdown(f"*Action:* AnalyzeSentiment")
+            st.markdown(f"*Input:* {user_input}")
+            st.markdown(f"*Observation:* {sentiment_and_emotion}")
 
-    if creative_btn:
-        st.subheader("🎨 Creative Response")
-        st.markdown(f"*Action:* GenerateCreativeResponse")
-        st.markdown(f"*Input:* {user_input}")
+        if creative_btn:
+            st.subheader("🎨 Creative Response")
+            st.markdown(f"*Action:* GenerateCreativeResponse")
+            st.markdown(f"*Input:* {user_input}")
 
-        if fast_mode:
-            poetic_response = generate_creative_response(user_input)
-            st.markdown(f"✨ Poetic Output:\n\n{poetic_response}")
-        else:
-            with st.spinner("⏳ Generating response..."):
-                agent_response = agent.run(user_input)  # agent must be defined globally
-                st.markdown(f"*Agent Raw Response:*\n{agent_response}")
-                st.subheader("✨ Poetic Output")
-                st.markdown(agent_response)  # Display the agent's creative response
-
+            if fast_mode:
+                poetic_response = generate_creative_response(user_input)
+                st.markdown(f"✨ Poetic Output:\n\n{poetic_response}")
+            else:
+                with st.spinner("⏳ Generating response..."):
+                    agent_response = agent.run(user_input)
+                    st.markdown(f"*Agent Raw Response:*\n{agent_response}")
+                    st.subheader("✨ Poetic Output")
+                    st.markdown(agent_response)
     else:
         st.info("")
+
 
 
 
