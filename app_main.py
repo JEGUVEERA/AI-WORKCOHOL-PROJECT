@@ -30,8 +30,7 @@ from langchain_openai import OpenAI
 
 
 # Custom Modules
-from sentiment import agent, fast_generate_poetic_response, analyze_sentiment_and_emotion
-
+from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
 
@@ -529,7 +528,7 @@ elif page == "Text Analysis & Sentiment Response":
             st.markdown(f"**Input:** {user_input}")
 
             if fast_mode:
-                poetic_response = fast_generate_poetic_response(user_input)
+                poetic_response = generate_creative_response(user_input)
                 st.markdown(f"**✨ Poetic Output:**\n\n{poetic_response}")
             else:
                 with st.spinner("⏳ Generating response..."):
