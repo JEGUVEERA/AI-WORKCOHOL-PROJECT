@@ -143,7 +143,7 @@ streamlit run app.py (but is in txt formate because of local server in app.txt)
 To run the Streamlit application, use the following command:
 
 ```bash
-streamlit run app_main_app.py
+streamlit run app_ai.py
 ```
 
 

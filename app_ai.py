@@ -31,7 +31,7 @@ from langchain_openai import OpenAI
 
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
-
+from sentiments import agent, analyze_sentiment_and_emotion, generate_creative_response
 
 
 
@@ -219,7 +219,7 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 ### --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator","Text to Speech",
+    "Email Content Generator","Text to Speech","Text Analysis and  Sentiment response ", 
     "Data Visualization", "Chat History"
 ])
 
@@ -528,6 +528,45 @@ elif page == "Text to Speech":
 
 # --- sentimental Page ---
 # --- Sentiment Page ---
+elif page == "Text Analysis and Creative Sentiment Response":
+    st.title("📝 Text Analysis and Creative Sentiment Response Generator")
+    st.markdown("### Enter your text below:")
+
+    user_input = st.text_area("Input Text:", height=150)
+    fast_mode = st.checkbox("⚡ Fast Mode (no LLM calls)", value=True)
+
+    col1, col2 = st.columns(2)
+    analyze_btn = col1.button("Analyze Sentiment")
+    creative_btn = col2.button("Generate Creative Response")
+
+    if user_input:
+        if analyze_btn:
+            try:
+                sentiment_and_emotion = analyze_sentiment_and_emotion(user_input)
+                st.subheader("📊 Analysis Result")
+                st.markdown(f"**Input:** {user_input}")
+                st.markdown(f"**Sentiment/Emotion:** {sentiment_and_emotion}")
+            except Exception as e:
+                st.error(f"⚠️ Error analyzing sentiment: {e}")
+
+        if creative_btn:
+            st.subheader("🎨 Creative Response")
+            st.markdown(f"**Input:** {user_input}")
+            try:
+                if fast_mode:
+                    poetic_response = generate_creative_response(user_input)
+                    st.markdown("✨ **Poetic Output:**")
+                    st.markdown(poetic_response)
+                else:
+                    with st.spinner("⏳ Generating creative response..."):
+                        agent_response = agent.run(user_input)
+                        st.markdown("✨ **LLM Response:**")
+                        st.markdown(agent_response)
+            except Exception as e:
+                st.error(f"⚠️ Error generating creative response: {e}")
+    else:
+        st.info("📝 Please enter some text above to get started.")
+
 
 
 
