@@ -219,7 +219,7 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 ### --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator","Text to Speech","Text Analysis and Creative Sentiment Response", 
+    "Email Content Generator","Text to Speech","Text Analysis and  Sentiment response ", 
     "Data Visualization", "Chat History"
 ])
 
