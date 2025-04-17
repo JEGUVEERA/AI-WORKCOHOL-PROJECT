@@ -278,7 +278,6 @@ def analyze_sentiment_and_emotion(text: str) -> str:
     top_emotions = [e for e, count in dominant_emotions if count > 0]
     emotion_result = ", ".join(top_emotions) if top_emotions else "No strong emotion detected"
 
-    return f"Sentiment: {sentiment}\nDominant Emotions: {emotion_result}\nCounts: {dict(emotion_counts)}"
 
 # Creative response function
 def generate_creative_response(text: str) -> str:

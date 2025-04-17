@@ -30,7 +30,11 @@ from langchain_openai import OpenAI
 
 
 # Custom Modules
+<<<<<<< HEAD
 from sentimental import agent, analyze_sentiment_and_emotion, generate_creative_response
+=======
+from sentiment import agent, analyze_sentiment_and_emotion, generate_creative_response
+>>>>>>> ca9ff23702708367345fb174be390d70f08ae509
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
 
