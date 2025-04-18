@@ -2,7 +2,7 @@
 
 ### 🎥 Demo
 
-[Watch Video on Google Drive](https://vizard.ai/share?code=0fA88F&susId=7805804&utm_source=export_share&utm_medium=export_share_copy_link&utm_campaign=export_share_copy_link)
+[Watch Video on Google Drive](https://drive.google.com/file/d/1s74blkI1XZO18ui1F-fs9HnV6yNNOQWn/view?usp=sharing)
 
 ## Overview
 AI Workcohol Project is an AI-powered marketing and content generation platform that leverages multiple AI models including Gemini API, Ollama, and LangChain for creating diverse marketing content and performing text analysis.
