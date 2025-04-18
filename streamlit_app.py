@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -27,10 +28,11 @@ import google.generativeai as genai
 from langchain.chains import LLMChain
 from langdetect import detect
 from langchain_openai import OpenAI
-
-
+from collections import defaultdict
+from google.generativeai import GenerativeModel
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
+from emotion import detect_emotion_sentiment, generate_creative_response
 
 
 
@@ -132,28 +134,25 @@ SUPPORTED_LANGUAGES = {
 }
 
 def text_to_speech(text: str) -> BytesIO:
-    max_retries = 5
-    for attempt in range(max_retries):
-        try:
-            detected_language = detect(text)
-            if detected_language not in SUPPORTED_LANGUAGES:
-                st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
-                detected_language = "en"
+    try:
+        detected_language = detect(text)
+        if detected_language not in SUPPORTED_LANGUAGES:
+            st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
+            detected_language = "en"
 
-            tts = gTTS(text=text, lang=detected_language)
-            audio_buffer = BytesIO()
-            tts.write_to_fp(audio_buffer)
-            audio_buffer.seek(0)
-            return audio_buffer
+        tts = gTTS(text=text, lang=detected_language)
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer
 
-        except Exception as e:
-            if "429" in str(e) and attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff
-                st.warning(f"Too many requests. Retrying in {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                st.error(f"Text-to-Speech Error: {e}")
-                return None
+    except Exception as e:
+        st.error(f"Text-to-Speech Error: {e}")
+        return None
+
+
+
+
 
 
 
@@ -211,6 +210,12 @@ def generate_multiple_posts(platforms, content):
     return results
 
 
+
+
+
+# ------------
+
+
 # Configure Streamlit
 st.set_page_config(page_title=" AI FOR MARKETING ", layout="wide")
 st.sidebar.title("🚀 AI FOR MARKETING ")
@@ -226,7 +231,7 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 ### --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator","Text to Speech",
+    "Email Content Generator","Text to Speech","Text Analysis and Creative  Response",
     "Data Visualization", "Chat History"
 ])
 
@@ -240,7 +245,42 @@ if page == "Home":
 
 
 
+# -- -Text Analysis and Creative Sentiment Response
 
+
+
+
+# Make sure this is part of a larger script where `page` is defined properly (e.g., using st.sidebar.selectbox)
+
+elif page == "Text Analysis and Creative Sentiment Response":
+  st.title("📝 Text Analysis and Creative Sentiment Response")
+  st.markdown("Enter text to analyze its *sentiment and emotion*, or generate a creative response.")
+
+user_input = st.text_area("Input Text", height=150)
+fast_mode = st.checkbox("⚡ Fast Mode (Local Rule-based Analysis)", value=True)
+
+col1, col2 = st.columns(2)
+analyze_btn = col1.button("🔍 Analyze Sentiment & Emotion")
+creative_btn = col2.button("🎨 Generate Creative Response")
+
+if user_input.strip():
+    if analyze_btn:
+        st.subheader("📊 Sentiment & Emotion Analysis")
+        result = detect_emotion_sentiment(user_input) if fast_mode else analyze_with_gemini(user_input)
+
+        st.markdown(f"- **Sentiment:** {result.get('sentiment', 'N/A')}")
+        if 'dominant_emotion' in result:
+            st.markdown(f"- **Dominant Emotion:** {result['dominant_emotion']}")
+        if 'emotions' in result:
+            st.markdown(f"- **Emotions:** {', '.join(result['emotions'])}")
+        if 'emotion_scores' in result:
+            st.markdown(f"- **Emotion Scores:** {result['emotion_scores']}")
+
+    if creative_btn:
+        st.subheader("🎨 Creative Response")
+        st.markdown(generate_creative_response(user_input))
+else:
+    st.info("💬 Please enter some text above to get started.")
 
 # --- Chat Bot ---
 
@@ -529,8 +569,6 @@ elif page == "Text to Speech":
                 st.error("Failed to generate audio.")
         else:
             st.warning("Please enter some text.")
-
-
 
 
 

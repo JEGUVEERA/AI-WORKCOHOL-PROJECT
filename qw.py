@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -27,10 +28,11 @@ import google.generativeai as genai
 from langchain.chains import LLMChain
 from langdetect import detect
 from langchain_openai import OpenAI
-
-
+from collections import defaultdict
+from google.generativeai import GenerativeModel
 
 from chat_utils import load_chat_history, save_chat_history, display_chat_history
+from emotion import detect_emotion_sentiment, analyze_with_gemini, generate_creative_response
 
 
 
@@ -132,28 +134,25 @@ SUPPORTED_LANGUAGES = {
 }
 
 def text_to_speech(text: str) -> BytesIO:
-    max_retries = 5
-    for attempt in range(max_retries):
-        try:
-            detected_language = detect(text)
-            if detected_language not in SUPPORTED_LANGUAGES:
-                st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
-                detected_language = "en"
+    try:
+        detected_language = detect(text)
+        if detected_language not in SUPPORTED_LANGUAGES:
+            st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
+            detected_language = "en"
 
-            tts = gTTS(text=text, lang=detected_language)
-            audio_buffer = BytesIO()
-            tts.write_to_fp(audio_buffer)
-            audio_buffer.seek(0)
-            return audio_buffer
+        tts = gTTS(text=text, lang=detected_language)
+        audio_buffer = BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer
 
-        except Exception as e:
-            if "429" in str(e) and attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff
-                st.warning(f"Too many requests. Retrying in {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                st.error(f"Text-to-Speech Error: {e}")
-                return None
+    except Exception as e:
+        st.error(f"Text-to-Speech Error: {e}")
+        return None
+
+
+
+
 
 
 
@@ -211,6 +210,12 @@ def generate_multiple_posts(platforms, content):
     return results
 
 
+
+
+
+# ------------
+
+
 # Configure Streamlit
 st.set_page_config(page_title=" AI FOR MARKETING ", layout="wide")
 st.sidebar.title("🚀 AI FOR MARKETING ")
@@ -226,7 +231,7 @@ st.sidebar.title("🚀 AI FOR MARKETING ")
 ### --- Feature Selection ---
 page = st.sidebar.radio("Choose a Feature", [
     "Home", "Chat Bot", "Social Media Post Generator", "Marketing Content Generator",
-    "Email Content Generator","Text to Speech",
+    "Email Content Generator","Text to Speech","Text Analysis and Creative  Response",
     "Data Visualization", "Chat History"
 ])
 
@@ -240,7 +245,141 @@ if page == "Home":
 
 
 
+# -- -Text Analysis and Creative Sentiment Response
 
+
+
+
+# Make sure this is part of a larger script where `page` is defined properly (e.g., using st.sidebar.selectbox)
+
+elif page == "Text Analysis and Creative Sentiment Response":
+    st.title("📝 Text Analysis and Creative Sentiment Response")
+
+    st.markdown("Enter some text and analyze its *sentiment and emotion*, or generate a creative response.")
+
+    # Word Lists
+    positive_words = [
+        "amazing", "wonderful", "fantastic", "excellent", "terrific", "brilliant", "superb",
+        "marvelous", "outstanding", "remarkable", "incredible", "phenomenal", "spectacular",
+        "extraordinary", "magnificent"
+    ]
+    negative_words = [
+        "infuriating", "agonizing", "unrecoverable", "unethical", "paralyzing", "unsolicited",
+        "horrendous", "unsound", "unhelpful", "unresolvable", "failing", "unresolved", "lousy", "regretful"
+    ]
+    emotion_keywords = {
+        "happiness": ["happy", "joy", "excited", "elated", "delighted"],
+        "anger": ["angry", "mad", "furious", "irritated", "enraged"],
+        "sadness": ["sad", "depressed", "unhappy", "sorrowful", "melancholy"],
+        "fear": ["afraid", "scared", "fearful", "terrified", "petrified"],
+        "neutral": ["neutral"]
+    }
+
+    def detect_emotion_sentiment(text: str) -> dict:
+        """
+        Detect sentiment and emotion using rule-based word lists.
+        """
+        text_lower = text.lower()
+        sentiment_score = 0
+        emotion_counts = defaultdict(int)
+
+        for word in positive_words:
+            if re.search(rf"\b{re.escape(word)}\b", text_lower):
+                sentiment_score += 1
+        for word in negative_words:
+            if re.search(rf"\b{re.escape(word)}\b", text_lower):
+                sentiment_score -= 1
+        for emotion, keywords in emotion_keywords.items():
+            for word in keywords:
+                if re.search(rf"\b{re.escape(word)}\b", text_lower):
+                    emotion_counts[emotion] += 1
+
+        sentiment = (
+            "positive" if sentiment_score > 0 else
+            "negative" if sentiment_score < 0 else
+            "neutral"
+        )
+        dominant_emotion = max(emotion_counts.items(), key=lambda x: x[1], default=("neutral", 0))[0]
+
+        return {
+            "sentiment": sentiment,
+            "dominant_emotion": dominant_emotion,
+            "emotion_scores": dict(emotion_counts)
+        }
+
+    def analyze_with_gemini(text: str) -> dict:
+        """
+        Use Gemini API to analyze emotion and sentiment.
+        """
+        prompt = (
+            "Analyze the following comment for both **sentiment** and **emotion**:\n\n"
+            f"Comment: \"{text}\"\n\n"
+            "Respond in JSON format like:\n"
+            "{\n"
+            "  \"sentiment\": \"Positive | Negative | Neutral\",\n"
+            "  \"emotions\": [\"happiness\", \"anger\"]\n"
+            "}\n"
+        )
+        try:
+            response = model.generate_content(prompt)
+            cleaned_text = response.text.strip("` \n")
+
+            try:
+                result = json.loads(cleaned_text)
+            except json.JSONDecodeError:
+                result = {"sentiment": "Unknown", "emotions": []}
+                for line in cleaned_text.splitlines():
+                    line = line.lower()
+                    if "sentiment" in line:
+                        if "positive" in line:
+                            result["sentiment"] = "Positive"
+                        elif "negative" in line:
+                            result["sentiment"] = "Negative"
+                        elif "neutral" in line:
+                            result["sentiment"] = "Neutral"
+                    if "emotion" in line:
+                        emotions = line.split(":")[-1].strip()
+                        result["emotions"] = [e.strip().capitalize() for e in emotions.split(",") if e.strip()]
+            return result
+        except Exception as e:
+            print(f"[Gemini Error] {e}")
+            return {"sentiment": "Error", "emotions": []}
+
+    def generate_creative_response(text: str) -> str:
+        """
+        Return a creative response (for example, reversed string).
+        """
+        return f"✨ Here's a creative twist: {text[::-1]}"
+
+    # Test run
+    user_input = st.text_area("Input Text", height=150)
+    fast_mode = st.checkbox("⚡ Fast Mode (Local Rule-based Analysis)", value=True)
+
+    col1, col2 = st.columns(2)
+    analyze_btn = col1.button("🔍 Analyze Sentiment & Emotion")
+    creative_btn = col2.button("🎨 Generate Creative Response")
+
+    if user_input.strip():
+        if analyze_btn:
+            st.subheader("📊 Sentiment & Emotion Analysis")
+            if fast_mode:
+                result = detect_emotion_sentiment(user_input)
+            else:
+                result = analyze_with_gemini(user_input)
+
+            st.markdown(f"- **Sentiment:** {result.get('sentiment', 'N/A')}")
+            if 'dominant_emotion' in result:
+                st.markdown(f"- **Dominant Emotion:** {result['dominant_emotion']}")
+            if 'emotions' in result:
+                st.markdown(f"- **Emotions:** {', '.join(result['emotions'])}")
+            if 'emotion_scores' in result:
+                st.markdown(f"- **Emotion Scores:** {result['emotion_scores']}")
+
+        if creative_btn:
+            st.subheader("🎨 Creative Response")
+            st.markdown(generate_creative_response(user_input))
+    else:
+        st.info("💬 Please enter some text above to get started.")
 
 # --- Chat Bot ---
 
@@ -529,8 +668,6 @@ elif page == "Text to Speech":
                 st.error("Failed to generate audio.")
         else:
             st.warning("Please enter some text.")
-
-
 
 
 
