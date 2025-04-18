@@ -125,12 +125,7 @@ def generate_text_content(ingredients: str) -> str:
 
 
 # Supported languages by gTTS
-SUPPORTED_LANGUAGES = {
-    "af", "ar", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr",
-    "hu", "id", "is", "it", "ja", "jw", "kn", "ko", "la", "lv", "mk", "ml", "mr", "my", "ne", "nl", "no", "pl", "pt",
-    "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW", "zh"
-}
-
+SUPPORTED_LANGUAGES = ["en", "hi", "te", "ta", "kn", "bn", "ml", "gu", "mr"]
 def text_to_speech(text: str) -> BytesIO:
     max_retries = 5
     for attempt in range(max_retries):
