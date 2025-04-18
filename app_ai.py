@@ -132,21 +132,28 @@ SUPPORTED_LANGUAGES = {
 }
 
 def text_to_speech(text: str) -> BytesIO:
-    try:
-        detected_language = detect(text)
-        if detected_language not in SUPPORTED_LANGUAGES:
-            st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
-            detected_language = "en"
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            detected_language = detect(text)
+            if detected_language not in SUPPORTED_LANGUAGES:
+                st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
+                detected_language = "en"
 
-        tts = gTTS(text=text, lang=detected_language)
-        audio_buffer = BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        return audio_buffer
+            tts = gTTS(text=text, lang=detected_language)
+            audio_buffer = BytesIO()
+            tts.write_to_fp(audio_buffer)
+            audio_buffer.seek(0)
+            return audio_buffer
 
-    except Exception as e:
-        st.error(f"Text-to-Speech Error: {e}")
-        return None
+        except Exception as e:
+            if "429" in str(e) and attempt < max_retries - 1:
+                wait_time = 2 ** attempt  # Exponential backoff
+                st.warning(f"Too many requests. Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+            else:
+                st.error(f"Text-to-Speech Error: {e}")
+                return None
 
 
 
