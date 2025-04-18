@@ -125,11 +125,7 @@ def generate_text_content(ingredients: str) -> str:
 
 
 # Supported languages by gTTS
-SUPPORTED_LANGUAGES = {
-    "af", "ar", "bn", "bs", "ca", "cs", "cy", "da", "de", "el", "en", "eo", "es", "et", "fi", "fr", "gu", "hi", "hr",
-    "hu", "id", "is", "it", "ja", "jw", "kn", "ko", "la", "lv", "mk", "ml", "mr", "my", "ne", "nl", "no", "pl", "pt",
-    "ro", "ru", "si", "sk", "sq", "sr", "su", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW", "zh"
-}
+SUPPORTED_LANGUAGES = ["en", "hi", "te", "ta", "kn", "bn", "ml", "gu", "mr"]
 
 def text_to_speech(text: str) -> BytesIO:
     max_retries = 5
@@ -137,9 +133,7 @@ def text_to_speech(text: str) -> BytesIO:
         try:
             detected_language = detect(text)
             if detected_language not in SUPPORTED_LANGUAGES:
-                st.warning(f"⚠ Detected language '{detected_language}' is not supported. Using English instead.")
                 detected_language = "en"
-
             tts = gTTS(text=text, lang=detected_language)
             audio_buffer = BytesIO()
             tts.write_to_fp(audio_buffer)
@@ -147,13 +141,11 @@ def text_to_speech(text: str) -> BytesIO:
             return audio_buffer
 
         except Exception as e:
-            if "429" in str(e) and attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff
-                st.warning(f"Too many requests. Retrying in {wait_time} seconds...")
+            if "429" in str(e).lower() and attempt < max_retries - 1:
+                wait_time = 2 ** attempt
                 time.sleep(wait_time)
             else:
-                st.error(f"Text-to-Speech Error: {e}")
-                return None
+                raise RuntimeError(f"Text-to-Speech Error: {e}")
 
 
 
