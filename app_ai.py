@@ -440,69 +440,133 @@ elif page == "Marketing Content Generator":
 
 
 
+# elif page == "Email Content Generator":
+#     st.title("📧 Email Marketing Content Generator")
+
+#     # Input Fields
+#     tone = st.selectbox("Select Tone", ["Formal", "Casual", "Professional","Playful"])
+#     email_subject = st.text_input("Enter email subject:")
+#     emoji_boost = st.checkbox("Add emojis to subject (fun & engaging)")
+#     email_body = st.text_area("Enter email body (or key points):")
+
+#     include_cta = st.checkbox("Include a Call-To-Action (CTA) in the email")
+
+#     num_variants = st.slider("How many tone variants?", min_value=1, max_value=3, value=1)
+
+#     # Email Generation Function
+#     def generate_email_content(subject: str, body: str, tone: str, emoji: bool, cta: bool) -> str:
+#         emoji_prefix = "🔥🚀✨💼📣 " if emoji else ""
+#         subject_text = f"{emoji_prefix}{subject}"
+
+#         prompt = (
+#             f"Generate a {tone.lower()} marketing email with the subject: '{subject_text}'. "
+#             f"Content should be based on the following key points: '{body}'. "
+#             "Include a greeting and a closing statement. "
+#             "Keep the email concise (3 to 5 lines). "
+#             "Maintain a natural human tone, not robotic. "
+#         )
+#         if cta:
+#             prompt += "Include a clear and compelling Call-To-Action at the end. "
+#         prompt += "Only generate the email—no extra explanation or metadata."
+
+#         try:
+#             response = model.generate_content(prompt)
+#             return response.text.strip()
+#         except Exception as e:
+#             st.error(f"Error generating email content: {e}")
+#             return "Error generating email."
+
+#     # Generate Button
+#     if st.button("Generate Email"):
+#         if email_subject and email_body:
+#             st.subheader("📩 AI-Generated Email Content")
+#             for i in range(num_variants):
+#                 variant_tone = tone
+#                 if num_variants > 1:
+#                     variant_tone = random.choice(["Formal", "Casual", "Professional","Playful"])
+#                     st.markdown(f"### ✨ Variant {i+1} ({variant_tone})")
+
+#                 email_result = generate_email_content(email_subject, email_body, variant_tone, emoji_boost, include_cta)
+
+#                 with st.expander(f"📬 View Variant {i+1}"):
+#                     st.markdown(email_result)
+#                     st.code(email_result, language="markdown")
+
+#                     st.download_button(
+#                         label="📥 Download Email",
+#                         data=email_result,
+#                         file_name=f"email_variant_{i+1}.txt",
+#                         mime="text/plain"
+#                     )
+#         else:
+#             st.error("Please enter both the subject and the body to generate an email.")
+
+
+
 elif page == "Email Content Generator":
-    st.title("📧 Email Marketing Content Generator")
+    st.title("📧  Email Marketing Content Generator")
 
-    # Input Fields
-    tone = st.selectbox("Select Tone", ["Formal", "Casual", "Playful", "Professional"])
-    email_subject = st.text_input("Enter email subject:")
-    emoji_boost = st.checkbox("Add emojis to subject (fun & engaging)")
-    email_body = st.text_area("Enter email body (or key points):")
+    # Step 1: Email Details
+    st.subheader("Step 1: Email Details")
+    email_type = st.selectbox(
+        "Select Email Type",
+        ["Newsletter", "Promotional", "Follow-up", "Cold Outreach", "Event Invitation", "Other"]
+    )
+    tone = st.selectbox(
+        "Select Tone",
+        ["Formal", "Semi-formal", "Informal", "Friendly", "Persuasive"]
+    )
+    language = st.selectbox(
+        "Select Output Language",
+        ["English", "Hindi", "Telugu", "Tamil", "Kannada", "Bengali", "Malayalam", "Gujarati", "Marathi"]
+    )
 
-    include_cta = st.checkbox("Include a Call-To-Action (CTA) in the email")
+    # Step 2: Email Content Inputs
+    st.subheader("Step 2: Compose Your Email")
+    subject = st.text_input("Email Subject", placeholder="e.g., Limited Time Offer Just for You!")
+    recipient = st.text_input("Recipient Name (optional)", placeholder="e.g., John Doe")
+    context = st.text_area(
+        "Describe the Purpose/Context",
+        placeholder="Describe what this email is about, the product/service, or any key details."
+    )
+    cta = st.text_input("Desired Call-to-Action (optional)", placeholder="e.g., Click here to learn more!")
 
-    num_variants = st.slider("How many tone variants?", min_value=1, max_value=3, value=1)
-
-    # Email Generation Function
-    def generate_email_content(subject: str, body: str, tone: str, emoji: bool, cta: bool) -> str:
-        emoji_prefix = "🔥🚀✨💼📣 " if emoji else ""
-        subject_text = f"{emoji_prefix}{subject}"
-
-        prompt = (
-            f"Generate a {tone.lower()} marketing email with the subject: '{subject_text}'. "
-            f"Content should be based on the following key points: '{body}'. "
-            "Include a greeting and a closing statement. "
-            "Keep the email concise (3 to 5 lines). "
-            "Maintain a natural human tone, not robotic. "
-        )
-        if cta:
-            prompt += "Include a clear and compelling Call-To-Action at the end. "
-        prompt += "Only generate the email—no extra explanation or metadata."
-
-        try:
-            response = model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            st.error(f"Error generating email content: {e}")
-            return "Error generating email."
-
-    # Generate Button
+    # Step 3: Generate Email
     if st.button("Generate Email"):
-        if email_subject and email_body:
-            st.subheader("📩 AI-Generated Email Content")
-            for i in range(num_variants):
-                variant_tone = tone
-                if num_variants > 1:
-                    variant_tone = random.choice(["Formal", "Casual", "Playful", "Professional"])
-                    st.markdown(f"### ✨ Variant {i+1} ({variant_tone})")
-
-                email_result = generate_email_content(email_subject, email_body, variant_tone, emoji_boost, include_cta)
-
-                with st.expander(f"📬 View Variant {i+1}"):
-                    st.markdown(email_result)
-                    st.code(email_result, language="markdown")
-
-                    st.download_button(
-                        label="📥 Download Email",
-                        data=email_result,
-                        file_name=f"email_variant_{i+1}.txt",
-                        mime="text/plain"
-                    )
+        if not subject or not context:
+            st.error("Please provide both a subject and context for the email.")
         else:
-            st.error("Please enter both the subject and the body to generate an email.")
+            prompt = (
+                f"Generate a {tone.lower()} {email_type.lower()} email in {language}.\n"
+                f"Subject: {subject}\n"
+                f"{'Recipient: ' + recipient if recipient else ''}\n"
+                f"Context: {context}\n"
+                f"{'Call-to-Action: ' + cta if cta else ''}\n"
+                "The email should be natural, engaging, and tailored to the specified type and audience. "
+                "Include a clear subject line and a concise, compelling body. "
+                "Personalize the greeting if a recipient name is given. "
+                "Do not include any extra commentary or code."
+            )
+            with st.spinner("Generating email..."):
+                try:
+                    email_content = model.generate_content(prompt).text
+                    st.subheader("📧 Generated Email Preview")
+                    st.markdown(f"**Subject:** {subject}")
+                    st.markdown(email_content)
 
+                    # Sentiment/Spam Check
+                    sentiment = TextBlob(email_content).sentiment.polarity
+                    if sentiment < -0.2:
+                        st.warning("⚠ The generated email seems negative in tone. Consider revising your context or tone selection.")
 
-
+                    # Download Option
+                    st.download_button(
+                        "Download Email as Text",
+                        data=email_content,
+                        file_name="generated_email.txt"
+                    )
+                except Exception as e:
+                    st.error(f"Error generating email: {e}")
 
 
 # --- Text to Speech ---#
